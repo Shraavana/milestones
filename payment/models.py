@@ -57,6 +57,7 @@ class Payments(models.Model):
 
     
 class CartOrder(models.Model):
+    
     STATUS =(
         ('New','New'),
         ('Paid','Paid'),
