@@ -1,0 +1,452 @@
+{% extends "userhome/base.html" %}
+{% load static %}
+{% block content %}
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<main class="main">
+    <div class="page-header breadcrumb-wrap">
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html" rel="nofollow">Home</a>
+                <span></span> {{product.category}}
+                <span></span> {{product.product_name}}
+            </div>
+        </div>
+    </div>
+    <section class="mt-50 mb-50">
+        <div class="container">
+           
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="product-detail accordion-detail">
+                        <div class="row mb-50">
+                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                <div class="detail-gallery">
+                                    <span class="zoom-icon"><i class="fi-rs-search"></i></span>
+                                    <!-- MAIN SLIDES -->
+                                    <div class="product-image-slider" >
+                                        <figure class="#">
+                                            <img id="mainProductImage" style="height: 550px;
+                                            width: 700px;" src="{{ product.productattribute_set.first.image.url }}" alt="product image">
+                                        </figure>
+
+                                    </div>
+                                    <!-- THUMBNAILS -->
+                                    <div class="slider-nav-thumbnails pl-15 pr-15">
+                                        {% for image in images %}
+                                            <div>
+                                                <img src="{{ image.images.url }}" alt="product image" class="thumbnail-image" data-image="{{ image.images.url }}">
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <!-- End Gallery -->
+                            </div>
+                            <div class="col-md-6 col-sm-12 col-xs-12">
+                                <div class="detail-info">
+                                    <h2 class="title-detail">{{ product.product_name}}</h2>
+                                    <div class="product-detail-rating">
+                                        <div class="pro-details-brand">
+                                            <span> Brands: <a href="shop-grid-right.html">{{ product.brand }}</a></span>
+                                        </div>
+                                    </div>
+                                    <div class="clearfix product-price-cover">
+                                        
+                                            {% if discount_offer is not None and discount_offer.active %}
+                                                <div class="product-price">
+                                                   <span style="font-size: 30px; font-weight:bold" >₹<span class="current-product-price-{{product.id}} text-success" id="product_price" class='product-price1'>{{product.productattribute_set.first.price}}</span></span> 
+                                                    <br> <br>
+                                                    ₹<span class="old-price font-md ml-15" style="text-decoration: line-through;" id="old_price1" class='old_price1' >{{product.productattribute_set.first.old_price}}</span>
+                                                </div>
+                                                {% elif discounted_offer %}
+                                                {% for dis in discounted_offer %}
+                                                    {% if dis.active and dis.category == product.category %}
+                                                        <div class="product-price">
+                                                            <span style="font-size: 30px; font-weight:bold">₹<span class="current-product-price-{{product.id}} text-success" id="product_price" class='product-price1'>{{product.productattribute_set.first.price}}</span></span>
+                                                            <br> <br>
+                                                            ₹<span class="old-price font-md ml-15" style="text-decoration: line-through;" id="old_price1" class='old_price1'>{{product.productattribute_set.first.old_price}}</span>
+                                                        </div>
+                                                        {% else %}
+                                                        <div class="product-price">
+                                                            <span style="font-size: 30px; font-weight:bold">₹<span class="current-product-price-{{product.id}} text-success" id="product_price" class='product-price1'>{{product.productattribute_set.first.price}}</span></span>
+                                                            
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <div>
+                                                    <span style="font-size: 30px;">
+                                                        ₹<span class="current-product-price-{{product.id}} text-success" style="font-weight: bold;" id="product_price" class='product-price1'>{{product.productattribute_set.first.price}}</span>
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                                <br>
+                                                <br>
+                                            {% if discount_offer is not None and discount_offer.active %}
+                                            <div class="product-badges product-badges-position product-badges-mrg">
+                                                <span class="hot" style="font-weight: bold;">-{{ discount_offer.discount_percentage|floatformat:0 }}% Offer</span>
+                                            </div>
+                                            {% elif discounted_offer %}
+                                            {% for dis in discounted_offer %}
+                                                {% if dis.active and dis.category == product.category %}
+                                                <div class="product-badges product-badges-position product-badges-mrg">
+                                                    <span class="hot" style="font-weight: bold;">-{{ dis.discount_percentage|floatformat:0 }}% Offer</span>
+                                                </div>
+                                                    {% else %}
+                                                    <div class="product-badges product-badges-position product-badges-mrg">
+                                                        <span class="hot" style="font-weight: bold;">Hot</span>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="product-badges product-badges-position product-badges-mrg">
+                                                <span class="hot">Hot</span>
+                                            </div>
+                                       
+                                        </div>
+                                         {% endif %} 
+                                        
+                                    </div>
+                                    <div class="bt-1 border-color-1 mt-15 mb-15"></div>
+                                    <div class="short-desc mb-30">
+                                        <p>{{ product.description }}</p>
+                                    </div>
+                                    <div class="attr-detail attr-color mb-15">   
+                                        <div id="color-buttons">
+                                            <div class="attr-detail attr-color mb-15">
+                                                <strong class="mr-10">Color</strong>
+                                                <ul class="list-filter color-filter">
+                                                    <form method="post">
+                                                        {% csrf_token %}
+                                                        <label for="colorSelect">Choose a color:</label>
+                                                        
+                                                        <select id="colorselect" name="colorselect">
+                                                            {% for color in colors %}
+                                                                <option 
+                                                                    data-price="{{ color.price }}" 
+                                                                    data-old-price="{{ color.old_price }}"  
+                                                                    data-image="{{ color.image.url }}" 
+                                                                    value="{{ color.color.color_name }}" 
+                                                                    style="background-color: {{ color.color.color_code }}">
+                                                                    {{ color.color.color_name }}
+                                                                </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                </ul>
+                                            </div>                                          
+
+                                            
+                                         <div class="primary-color float-left">
+                                                <span type="text" id="product-color" class='product-color1' ></span>
+                                            </div> 
+                                        </div>
+                                    </div>
+                                    <p>Quanitity :</p>
+                                   
+                                    <div class="detail-extralink">
+                                        
+                                        <input type="number" value="1" class="form-control" id="productQty" min="1" oninput="updateAddToCartButton()" name="quantity" />
+                                        <div class="input-group-append">
+                                        <input type="hidden" class="product-image-one" value="{{product.productattribute_set.first.image.url}}"/>
+                                        <input type="hidden" class="product-id" value="{{product.id}}"/>
+                                        <input type="hidden" class="product-name" value="{{product.product_name}}"/>
+                                        <div class="product-color primary-color float-left">
+                                            <input type="hidden" id="product-color1" class='product-color1' value="{{ product.productattribute_set.first.color }}">
+                                        </div>
+                                        
+                                            <button type="submit" class="addtocart" data-item-id="{{ product.id }}">Add To Cart</button>
+                                         
+                                          
+                                        
+                                    </form>
+                                        </div>
+
+                                        <div class="product-extra-link2">
+                                          
+
+                                        </div>
+                                        <div class="product-extra-link2">
+                                          
+                                            <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'indexuser:add_wishlist' product.id%}"><i class="fi-rs-heart"></i></a>
+                                        </div>
+                                        <div id="success-message"></div>
+                                        <div id="error-message" ></div>
+                                    </div>
+                                    <ul class="product-meta font-xs color-grey mt-50">
+                                        <li class="mb-5">SKU: <a href="#">FWM15VKT</a></li>
+                                        <li class="mb-5">Tags: <a href="#" rel="tag">Cloth</a>, <a href="#" rel="tag">Women</a>, <a href="#" rel="tag">Dress</a> </li>
+                                        <li>Availability:<span class="in-stock text-success ml-5">{{product.stock}}</span></li>
+                                    </ul>
+                                </div>
+                                <!-- Detail Info -->
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-10 m-auto entry-main-content">
+                                <h2 class="section-title style-1 mb-30">Description</h2>
+                                <div class="description mb-50">
+                                    <p>{{ product.description }}</p>
+                                    <p>{{ product.specifications }}</p>
+                                    <script>
+                                        // Function to change price and color when the select tag changes
+                                        const changePriceFromSelect = (selectElement) => {
+                                            console.log('changePriceFromSelect called');
+                                            // Get the selected option
+                                            const selectedOption = selectElement.options[selectElement.selectedIndex];
+
+                                            // Get the color and price from the selected option
+                                            const selectedColor = selectedOption.value;
+                                            const price = selectedOption.getAttribute('data-price');
+                                            const oldPrice = selectedOption.getAttribute('data-old-price');
+
+                                            const imageSrc = selectedOption.getAttribute('data-image');
+
+                                            console.log('Selected Color:', selectedColor);
+                                            console.log('Price:', price);
+                                            console.log('Old Price:', oldPrice);
+                                            console.log('Image Source:', imageSrc);
+
+                                            // Update the displayed price
+                                            document.getElementById('product_price').innerText = price;
+
+                                             // Update the old price
+                                            const oldPriceElement = document.getElementById('old_price1');
+                                            if (oldPriceElement) {
+                                                oldPriceElement.innerText = oldPrice;
+                                                console.log('Old Price Updated:', oldPrice);
+                                            }
+
+                                            
+
+                                            // Update the displayed color
+                                            document.getElementById('product-color').value = selectedColor;
+                                            $("#product-color1").val(selectedColor);
+
+                                            // Update the main product image
+                                            document.getElementById('mainProductImage').src = imageSrc;
+
+                                             // Debugging: Verify that the image source has been set correctly
+                                            console.log('Image Source After Update:', document.getElementById('mainProductImage').src);
+
+                                            
+                                            console.log('Selected Color:', selectedColor);
+                                            // Change the color of some element (replace 'elementId' with the actual ID)
+                                            // document.getElementById('elementId').style.backgroundColor = selectedColor;
+                                        };
+
+                                        // Add event listener for the change event on the color select
+                                        document.getElementById('colorselect').addEventListener('change', function () {
+                                            changePriceFromSelect(this);
+                                        });
+
+                                        // Trigger the changePriceFromSelect function on page load to set initial values
+                                        document.addEventListener('DOMContentLoaded', function () {
+                                            const selectElement = document.getElementById('colorselect');
+                                            changePriceFromSelect(selectElement);
+                                        });
+
+                                    </script>
+                        <div class="row mt-60 ">
+                            <div class="col-12">
+                                <h3 class="section-title style-1 mb-30">Related products</h3>
+                            </div>
+                            <div class="col-12 d-flex">
+                                {% for related in related_product %}
+                                <div class="row related-products">
+                                    
+                                    <div class="col-lg-9 col-md-6 col-12 col-sm-6">
+                                        <div class="product-cart-wrap small hover-up">
+                                            <div class="product-img-action-wrap">
+                                                <div class="product-img product-img-zoom">
+                                                    <a href="{% url 'indexuser:product_details' product_id=related.id %}"> 
+                                                        {% if related.productattribute_set.first.image %}
+                                                            <img class="default-img" src="{{ related.productattribute_set.first.image.url }}" alt="" style="width: 100%; height: auto;">
+                                                        {% else %}
+                                                            <!-- Handle the case where the image is missing or not set -->
+                                                            <p>No Image Available</p>
+                                                        {% endif %}
+                                                        
+                                                    </a>
+                                                    
+                                                </div>
+                                                
+                                                {% if discount_offer is not None and discount_offer.active %}
+                                                <div class="product-badges product-badges-position product-badges-mrg">
+                                                    <span class="hot">-{{ discount_offer.discount_percentage|floatformat:0 }}%</span>
+                                                </div>
+                                                {% elif discounted_offer %}
+                                                {% for dis in discounted_offer %}
+                                                    {% if dis.active and dis.category == related.category %}
+                                                    <div class="product-badges product-badges-position product-badges-mrg">
+                                                        <span class="hot">-{{ dis.discount_percentage|floatformat:0 }}%</span>
+                                                    </div>
+                                                        {% else %}
+                                                        <div class="product-badges product-badges-position product-badges-mrg">
+                                                            <span class="hot">Hot</span>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <div class="product-badges product-badges-position product-badges-mrg">
+                                                    <span class="hot">Hot</span>
+                                                </div>
+                                            {% endif %}
+                                            </div>
+                                            <div class="product-content-wrap">
+                                                <h2><a href="shop-product-right.html" tabindex="0">{{related.product_name}}</a></h2>
+                                                {% if discount_offer is not None and discount_offer.active %}
+                                                <div class="product-price">
+                                                    ₹<span class="current-product-price-{{related.id}}">{{related.productattribute_set.first.price}}</span>
+                                                    {% comment %} ₹<span class="old-price">{{related.productattribute_set.first.old_price}}</span> {% endcomment %}
+                                                </div>
+                                            {% elif discounted_offer %}
+                                                {% for dis in discounted_offer %}
+                                                    {% if dis.active and dis.category == product.category %}
+                                                        <div class="product-price">
+                                                            <span>₹<span class="current-product-price-{{related.id}}">{{related.productattribute_set.first.price}}</span></span>
+                                                            ₹<span class="old-price">{{related.productattribute_set.first.old_price}}</span>
+                                                        </div>
+                                                        {% else %}
+                                                        <div class="product-price">
+                                                            <span>₹<span class="current-product-price-{{related.id}}">{{related.productattribute_set.first.price}}</span></span>
+                                                            
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% else %}
+                                                <div>
+                                                    <span style="font-size: large;">
+                                                        ₹<span class="current-product-price-{{related.id}} text-success" style="font-weight: bold;">{{related.productattribute_set.first.price}}</span>
+                                                    </span>
+                                                </div>
+                                            {% endif %}
+                                            </div> 
+                                        </div>
+                                    </div>   
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div> 
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<style>
+    .thumbnail-image {
+        width: 150px; /* Set the desired width */
+        height: 150px; /* Set the desired height */
+        object-fit: cover; /* Maintain aspect ratio and cover the container */
+        border: 2px solid #ddd; /* Optional: Add a border for separation */
+        cursor: pointer; /* Optional: Add a pointer cursor for better UX */
+        transition: transform 0.3s ease-in-out; /* Add smooth transition */
+    }
+
+    .thumbnail-image:hover {
+        transform: scale(1.5); /* Increase size on hover */
+        z-index: 1; /* Adjust z-index to bring the hovered image to the front */
+    }
+
+    .zoomed-image {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain; /* Maintain aspect ratio within the container */
+        transition: transform 0.3s ease-in-out; /* Add smooth transition */
+    }
+
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var thumbnails = document.querySelectorAll('.thumbnail-image');
+        var zoomContainer = document.getElementById('zoomContainer');
+        var zoomedImage = document.getElementById('zoomedImage');
+
+        thumbnails.forEach(function(thumbnail) {
+            thumbnail.addEventListener('mouseenter', function() {
+                var newImageSource = thumbnail.getAttribute('data-image');
+                zoomedImage.src = newImageSource;
+                zoomContainer.style.display = 'block';
+            });
+
+            thumbnail.addEventListener('mouseleave', function() {
+                zoomContainer.style.display = 'none';
+            });
+        });
+        // Add this part to update the cart button after image source update
+        updateAddToCartButton();
+    });
+
+    function updateAddToCartButton() {
+        var quantityInput = document.getElementById('productQty');
+        var addToCartBtn = document.getElementById('addToCartBtn');
+        var quantity = parseInt(quantityInput.value, 10);
+    
+        if (quantity > 0) {
+            // Quantity is positive, show the "Add to Cart" button
+            addToCartBtn.style.display = 'inline-block';
+            document.getElementById('error-message').innerText = '';  // Clear any previous error messages/ Clear any previous error messages
+        } else {
+            // Quantity is not positive, hide the "Add to Cart" button and show an error message
+            quantityInput.value = 1;
+            addToCartBtn.style.display = 'inline-block';
+            document.getElementById('error-message').innerText = '';
+        }
+    }
+</script>
+
+<script>
+    $(document).ready(function() {
+        $(".addtocart").click(function(event) {
+            event.preventDefault();
+
+            var itemId = $(this).data("item-id");
+            var quantity = $("#productQty").val(); // Get the quantity value
+            var productColor = $("#product-color1").val();
+
+            $.ajax({
+                type: 'POST',
+                url: '/add_to_cart/',
+                data: {
+                    item_id: itemId,
+                    quantity: quantity,
+                    product_color: productColor, 
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log("AJAX Request Success");
+
+                    var cartCountElement = $(".cart-count");
+                    cartCountElement.text(response.cart_count);
+                    cartCountElement.attr("data-cart-count", response.cart_count);
+
+                   
+                    // Clear previous messages
+                    $("#success-message").empty().hide();
+                    $("#error-message").empty().hide();
+
+                    if (response.status === 'success') {
+                        // Update success message
+                        $("#success-message").text(response.message).show();;
+                    } else {
+                        // Update error message
+                        $("#error-message").text(response.message).show();;
+                    }
+                    
+                     
+                },
+                error: function(error) {
+                    console.error('Error during AJAX request:', error);
+                    console.log("AJAX Request Error");
+                    $(".messages").show();
+                    $(".messages").text('Error during AJAX request. Please try again.');
+                }
+            });
+        });
+    });
+</script>
+
+
+{% endblock %}

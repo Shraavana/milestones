@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+{% load static %}
+<html class="no-js" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta property="og:title" content="">
+    <meta property="og:type" content="">
+    <meta property="og:url" content="">
+    <meta property="og:image" content="">
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'assets/imgs/theme/favicon.svg'%}">
+    <!-- Template CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/main.css'%}">
+    <title>Milestone - Time of Future</title>
+</head>
+
+<body>
+    <header class="header-area header-style-5">
+        <div class="header-top header-top-ptb-1 d-none d-lg-block">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-xl-3 col-lg-4">
+                        <div class="header-info">
+                            <ul>
+                                <li><i class="fi-rs-smartphone"></i> <a href="#"></a></li>
+                                <li><i class="fi-rs-marker"></i><a  href="page-contact.html">Our location</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-xl-6 col-lg-4">
+                        <div class="text-center">
+                            <div id="news-flash" class="d-inline-block">
+                                <ul>
+                                    <li>Get great devices up to 50% off <a href="shop-grid-right.html">View details</a></li>
+                                    <li>Supper Value Deals - Save more with coupons</li>
+                                    <li>Trendy 25silver jewelry, save up 35% off today <a href="shop-grid-right.html">Shop now</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-lg-4">
+                        <div class="header-info header-info-right">
+                            <ul>
+                                
+                                <li>
+
+                             
+                                    {% if user.is_authenticated %}
+                                        <i class="fi-rs-user"></i>
+                                        <a href="#" class="language-dropdown-active">
+                                            {{ user.username }} <i class="fi-rs-angle-small-down"></i>
+                                        </a>
+                                        <ul class="language-dropdown">
+                                            <li><a href="{%url 'indexuser:user_account' %}">My Account</a></li>
+                                            <li><a href="{% url 'indexuser:user_logout' %}">Logout</a></li>
+                                        </ul>
+                                    {% else %}
+                                        <i class="fi-rs-user"></i>
+                                        <a href="{% url 'indexuser:user_login'%}">Log In / Sign Up</a>
+                                    {% endif %}
+                                </li>
+                                
+                            </ul>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        <div class="header-bottom sticky-bar sticky-white-bg">
+            <div class="container">
+                <div class="header-wrap header-space-between position-relative">
+                    <div class="logo logo-width-1">
+                    </div>
+                    <div class="main-menu main-menu-grow main-menu-padding-1 main-menu-lh-1 main-menu-mrg-1 hm3-menu-padding d-none d-lg-block hover-boder">
+                        <nav>
+                            <ul>
+                                <li><a class="active" href="{% url 'indexuser:user_index' %}">Home <i class="fi-rs-angle-down"></i></a>
+                                    
+                                </li>
+                                <li><a href="{% url 'indexuser:shop' %}">Shop <i class="fi-rs-angle-down"></i></a>
+                                   
+                                </li>
+                                
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class="header-action-right">
+                        <div class="search-style-2">
+                            <form action="/search">
+                                <input type="text" name="q" class="form-control" placeholder="Search ">
+                            </form>
+                        </div> 
+                        <div class="header-action-2">
+                            <div class="header-action-icon-2">
+                                <a href="{% url 'indexuser:wishlist' %}">
+                                    <img class="svgInject" alt="Evara" src="{% static 'assets/imgs/theme/icons/icon-heart.svg' %}">
+                                    <span class="pro-count blue">{{wishcount}}</span>
+                                </a> 
+                                
+                            </div>
+                            
+                            <div class="header-action-icon-2">
+                                {% if request.user.is_authenticated %}
+                                <a class="mini-cart-icon " href="{% url 'indexuser:cart' %}">
+                                    <img alt="Evara" src="{% static 'assets/imgs/theme/icons/icon-cart.svg'%}">
+                                    <span class="pro-count blue cart-count" >{{ cartcount }}</span>
+   
+                                </a>
+                                {% endif %}
+                            </div>
+                            <div class="header-action-icon d-block d-lg-none">
+                                <div class="burger-icon">
+                                    <span class="burger-icon-top"></span>
+                                    <span class="burger-icon-mid"></span>
+                                    <span class="burger-icon-bottom"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>

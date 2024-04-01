@@ -1,0 +1,103 @@
+{% extends "userhome/base.html" %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<div class="main">
+    {% if not wishlist_items %}
+    <div class="mb-200 mt-200">
+        <div class="text-center">
+            <h4>Your wishlist is empty !!!!!</h4>
+        </div>
+        <div class="text-center mb-10">
+            <a href="{% url 'indexuser:user_index' %}" class="btn">Continue Shopping</a>
+        </div>
+    </div>
+        
+        
+    {% else %}
+
+    <section class="mt-50 mb-50">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="table-responsive">
+                        <table class="table shopping-summery text-center">
+                            <thead>
+                                <tr class="main-heading">
+                                    <th scope="col" colspan="2">Product</th>
+                                    <th scope="col">Price</th>
+                                
+                                    <th scope="col">Action</th>
+                                    <th scope="col">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for wishlist_item  in wishlist_items %}
+                                <tr>
+                                    <td class="image product-thumbnail"><a href="{% url 'indexuser:product_details' wishlist_item.product.id  %}"><img src="{{wishlist_item.product.productattribute_set.first.image.url}}" alt="#"></a> </td>
+                                    <td class="product-des product-name">
+                                        <h5 class="product-name"><a href="shop-product-right.html">{{wishlist_item.product.product_name}}</a></h5>
+                                        <p class="font-xs">{{wishlist_item.product.category}}<br>
+                                        </p>
+                                    </td>
+                                    <td class="price" data-title="Price">
+                                        
+                                        <span>₹{{wishlist_item.product.productattribute_set.first.price}}</span>
+                                    </td>
+                
+                                    <td class="text-right" data-title="Cart">
+                                        <a href="{% url 'indexuser:product_details' product_id=wishlist_item.product.id  %}" class="btn btn-sm">view</a>
+
+                                       
+                                    </td>
+                                    <td class="action" data-title="Remove">
+
+                                            <a href="#" class="delete-wishlist" data-wishlist-id="{{ wishlist_item.id }}">
+                                            <i class="fi-rs-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</div>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteWishlistLinks = document.querySelectorAll('.delete-wishlist');
+        deleteWishlistLinks.forEach(link => {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                const wishlistItemId = this.getAttribute('data-wishlist-id');
+                confirmDeleteWishlist(wishlistItemId);
+            });
+        });
+    });
+
+    function confirmDeleteWishlist(wishlistItemId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You are about to remove this item from your wishlist!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/delete_wishlist/${wishlistItemId}`;
+            }
+        });
+    }
+</script>
+
+
+
+{% endblock %}

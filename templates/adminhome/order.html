@@ -1,0 +1,104 @@
+{% extends "adminhome/base.html" %}
+{% load static %}
+{% block content %}
+<section class="content-main">
+    <div class="content-header">
+        
+        
+    </div>
+    <div class="card mb-4">
+        <header class="card-header">
+            <form action="" method="post">
+                {% csrf_token %}
+                <div class="row gx-3">
+                
+                    <div class="col-lg-4 col-md-6 me-auto">
+                        <strong>Order Lists</strong>
+                    </div>
+                    <div class="col-lg-2 col-6 col-md-3">
+                        <select name="status" class="form-control">
+                            <option value="all" {% if status == 'all' %} selected {% endif %}>All</option>
+                            <option value="New" {% if status == 'New' %} selected {% endif %}>New</option>
+                            <option value="Confirmed" {% if status == 'Confirmed' %} selected {% endif %}>Confirmed</option>
+                            <option value="Shipped" {% if status == 'Shipped' %} selected {% endif %}>Shipped</option>
+                            <option value="Delivered" {% if status == 'Delivered' %} selected {% endif %}>Delivered</option>
+                            <option value="Cancelled" {% if status == 'Cancelled' %} selected {% endif %}>Cancelled</option>
+                            <option value="Return" {% if status == 'Return' %} selected {% endif %}>Return</option>
+                        </select> 
+                    </div>
+                    <div class="col-lg-2 col-6 col-md-3">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                    </div>
+                </div>
+            </form>
+        </header>
+<div class="card-body">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>#ID</th>
+                    <th>Name</th>
+                    <th>Customer</th>
+                    <th>amount</th>
+                    <th>status</th>
+                    <th>date</th>
+                   
+                    <th scope="col" class="text-end"> Action </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for obj in order %}
+                <tr>
+                    <td>{{ obj.order_number }}</td>
+                    <td>{{ obj.user.username }}</td>
+                    <td width="40%">
+                        <a href="#" class="itemside">
+                            <div class="left">
+                            </div>
+                            <div class="info pl-3">
+                                <h6 class="mb-0 title">{{obj.user}}</h6>
+                                <small class="text-muted">userid: {{obj.id}}</small>
+                            </div>
+                        </a>
+                    </td>
+                    <td>₹{{ obj.order_total }}</td>
+                    <td><span class="badge rounded-pill  
+                        {% if order.status == 'Confirmed' %} 
+                            bg-primary 
+                        {% elif order.status == 'Shipped' %}
+                            bg-info
+                        {% elif order.status == 'Delivered' %}
+                            bg-success
+                        {% elif order.status == 'Cancelled' %}
+                            bg-danger
+                        {% else %}
+                        bg-secondary
+                        {% endif %}
+                        ">{{obj.status}}</span></td>
+                    <td>{{obj.created_at}}</td>
+                    <td class="text-end">
+                                
+                        <a href="{% url 'orderitems' obj.id%}"> View</a>
+                    </td>   
+                    
+
+                </tr>
+                {% endfor %}
+                
+                
+            </tbody>
+        </table> <!-- table-responsive.// -->
+        {% if messages %}
+        <div class="alert alert-danger">
+            {% for message in messages %}
+            <strong>{{ message }}</strong><br>
+            {% endfor %}
+        </div>
+        {% endif %}
+                                                
+    </div>
+</div> <!-- card-body end// -->
+</div> <!-- card end// -->
+</section>
+{% endblock %}
