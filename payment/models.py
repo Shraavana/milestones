@@ -57,7 +57,6 @@ class Payments(models.Model):
 
     
 class CartOrder(models.Model):
-    ~
     STATUS =(
         ('New','New'),
         ('Paid','Paid'),
@@ -74,7 +73,7 @@ class CartOrder(models.Model):
     order_total = models.FloatField(null=True, blank=True)
     status=models.CharField(max_length=10, choices=STATUS, default='New')
     ip =  models.CharField(blank=True,max_length=20)
-    is_ordered=models.BooleanField(default=True)~
+    is_ordered=models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now, editable=True)
     updated_at=models.DateTimeField(auto_now=True)
     selected_address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
