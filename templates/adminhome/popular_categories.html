@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Page</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Your custom CSS -->
+    <link rel="stylesheet" href="your-styles.css">
+</head>
+<body>
+    <header>
+        <!-- Add your header content here -->
+    </header>
+    <main>
+        <div class="container">
+            <h1 class="text-center mb-5">BEST SELLER CATEGORIES</h1>
+            <div class="row">
+                {% for product in products %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="product-img-action-wrap">
+                                <div class="product-img product-img-zoom">
+                                    <a href="{% url 'indexuser:product_details' product_id=product.id %}">
+                                        <img class="card-img-top default-img" src="{{ product.productattribute_set.first.image.url }}" alt="Product Image">
+                                        
+                                    </a>
+                                </div>
+                                <div class="product-action-1">
+                                    <a aria-label="Add To Wishlist" class="action-btn hover-up" href="{% url 'indexuser:add_wishlist' product.id %}">
+                                        <i class="fi-rs-heart"></i>
+                                    </a> 
+                                </div> 
+                            </div>
+                            <div class="product-content-wrap">
+                                <div class="product-category">
+                                    <a href="shop-grid-right.html">{{ product.category }}</a>
+                                </div>
+                                <h2 class="card-title">
+                                    <a href="{% url 'indexuser:products_by_category' category_id=product.category.id %}">{{ product.product_name }}</a>
+                                </h2>
+                                <div class="rating-result" title="90%">
+                                    <span><span>90%</span></span>
+                                </div>
+                                <div class="product-price">
+                                    <span class="product-price1">{{ product.productattribute_set.first.price }}</span>
+                                    <span class="old-price">{{ product.offer_price }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+    <footer>
+        <!-- Add your footer content here -->
+    </footer>
+    <!-- Bootstrap JS and Your custom JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="your-script.js"></script>
+</body>
+</html>

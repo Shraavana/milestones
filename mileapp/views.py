@@ -391,7 +391,7 @@ def product_details(request, product_id,category_id=None):
 @login_required(login_url='user_login')
 def add_to_cart(request):
     user = request.user
-    address = Address.objects.get(users = user)
+    address = Address.objects.filter(users = user).first()
     
     if request.method == 'POST':
         product_id = request.POST.get('item_id')
@@ -662,6 +662,7 @@ def delete_cart_item(request):
         return JsonResponse({'error': str(e)})
 
 #======================================= user account ====================================================================================================================================
+#======================================= user account ====================================================================================================================================
 @cache_control(max_age=0,no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url='user_login')
 
@@ -677,11 +678,19 @@ def user_account(request):
     order_items = ProductOrder.objects.filter(user=request.user)
     for order in order_history:
         print(order.product_image)
+    
+
+    wallet, created = Wallet.objects.get_or_create(user=request.user, defaults={'balance': 0})
+    
+
+    wallethistory =  WalletHistory.objects.filter(wallet=wallet).order_by('-created_at')
     context={
         'user_address':user_address,
         'user_data' :request.user,
         'order_history': order_history,
         'order_items':order_items,
+        'wallet':wallet,
+        'wallethistory':wallethistory,
     }
     return render(request, 'userhome/user_account.html',context)
 #========================== edit,delete address ==========================================================================================================================================================================
@@ -953,14 +962,10 @@ def search(request):
 
 #...........................popularity------------------------------------
 
+
 def popularity(request):
-    # Annotate each product with the count of variations
-    products = ProductOrder.objects.values('product').annotate(variation_count=Count('variations')).order_by('-variation_count')
+    # Annotate each product with the count of orders and order them by count in descending order
+    popular_products = Product.objects.annotate(order_count=Count('productorder')).order_by('-order_count')[:10]
+    context = {'products': popular_products}
     
-    # Filter products with higher variation count (considered as more popular)
-    popular_products = [product['product'] for product in products if product['variation_count'] > 1]
-    
-    # Fetch the actual product instances
-    popular_product_instances = Product.objects.filter(pk__in=popular_products)
-    
-    return render(request, 'userhome/index.html', {'popular_products': popular_product_instances})
+    return render(request, 'userhome/index.html', context)

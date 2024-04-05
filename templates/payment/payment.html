@@ -106,17 +106,17 @@
                                     </tr>
                                     {% endfor %}
                                 </form>
-                                <tr>
+                                {% comment %} <tr>
                                     <td class="cart_total_label">cart</td>
-                                    <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{totals}}</td>
+                                    <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{item.total}}</td>
                                   </tr>
 
                                 <tr>
                                     <td class="cart_total_label">Coupen Descount</td>
-                                    <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{discounts}}</td>
+                                    <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{coupon.discount}}  %   OFF</td>
                                   </tr>
                                    
-                                    <tr>
+                                    <tr> {% endcomment %}
                                         <th>Total</th>
                                         <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹{{total }}</span></td>
                                     </tr>
@@ -144,12 +144,16 @@
                                 <button type="submit" class="btn btn-primary">Wallet</button>
                             </form>
                         {% endif %}
+
+                        <!-- Above 20000 rupees product is not applicable for cash on delivery -->
                         <div>
-                            
-                               
-                                <a href="{% url 'pay:place_order'%}"><button type="submit" id="cod-btn" class="btn btn-primary">Cash on delivery</button></a>
-                        
+                            {% if total <= 20000 %}
+                                <a href="{% url 'pay:place_order'%}">
+                                    <button type="submit" id="cod-btn" class="btn btn-primary">Cash on delivery</button>
+                                </a>
+                            {% endif %}
                         </div>
+                        
                         <div class="btn_container">
                            
                             <form method="post" action="{% url 'pay:payment' %}">

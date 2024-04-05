@@ -27,33 +27,35 @@
                                 <tr class="main-heading">
                                     <th scope="col" colspan="2">Product</th>
                                     <th scope="col">Price</th>
-                                
                                     <th scope="col">Action</th>
+                                    <th scope="col">Add to Cart</th> <!-- New column added -->
                                     <th scope="col">Remove</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for wishlist_item  in wishlist_items %}
+                                {% for wishlist_item in wishlist_items %}
                                 <tr>
-                                    <td class="image product-thumbnail"><a href="{% url 'indexuser:product_details' wishlist_item.product.id  %}"><img src="{{wishlist_item.product.productattribute_set.first.image.url}}" alt="#"></a> </td>
+                                    <td class="image product-thumbnail"><a href="{% url 'indexuser:product_details' wishlist_item.product.id %}"><img src="{{wishlist_item.product.productattribute_set.first.image.url}}" alt="#"></a> </td>
                                     <td class="product-des product-name">
                                         <h5 class="product-name"><a href="shop-product-right.html">{{wishlist_item.product.product_name}}</a></h5>
-                                        <p class="font-xs">{{wishlist_item.product.category}}<br>
-                                        </p>
+                                        <p class="font-xs">{{wishlist_item.product.category}}<br></p>
                                     </td>
                                     <td class="price" data-title="Price">
-                                        
                                         <span>₹{{wishlist_item.product.productattribute_set.first.price}}</span>
                                     </td>
-                
                                     <td class="text-right" data-title="Cart">
-                                        <a href="{% url 'indexuser:product_details' product_id=wishlist_item.product.id  %}" class="btn btn-sm">view</a>
-
-                                       
+                                        <a href="{% url 'indexuser:product_details' product_id=wishlist_item.product.id  %}" class="btn btn-sm">View</a>
+                                    </td>
+                                    <td class="action" data-title="Add To Cart"> <!-- New column added for Add to Cart -->
+                                        <div class="product-color primary-color float-left">
+                                            <input type="hidden" id="product-color{{ forloop.counter }}" class='product-color{{ forloop.counter }}' value="{{ wishlist_item.product.productattribute_set.first.color }}">
+                                        </div>
+                                        <button class="addtocart" data-item-id="{{ wishlist_item.product.id }}">Add To Cart</button>
+                                        <!-- Optional: Display quantity input -->
+                                      
                                     </td>
                                     <td class="action" data-title="Remove">
-
-                                            <a href="#" class="delete-wishlist" data-wishlist-id="{{ wishlist_item.id }}">
+                                        <a href="#" class="delete-wishlist" data-wishlist-id="{{ wishlist_item.id }}">
                                             <i class="fi-rs-trash"></i>
                                         </a>
                                     </td>
@@ -66,6 +68,7 @@
             </div>
         </div>
     </section>
+    
     {% endif %}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -97,6 +100,96 @@
         });
     }
 </script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var addToCartBtns = document.querySelectorAll('.addtocart');
+
+        addToCartBtns.forEach(function(addToCartBtn) {
+            addToCartBtn.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent the default form submission
+                
+                // Extract item ID from the button's data-item-id attribute
+                var itemId = addToCartBtn.getAttribute('data-item-id');
+                
+                // Call function to add item to cart
+                addItemToCart(itemId);
+            });
+        });
+
+        // Call this function to initially update the "Add to Cart" buttons
+        updateAddToCartButtons();
+    });
+
+    function updateAddToCartButtons() {
+        var quantityInput = document.getElementById('productQty');
+        var quantity = parseInt(quantityInput.value, 10);
+
+        var addToCartBtns = document.querySelectorAll('.addtocart');
+
+        addToCartBtns.forEach(function(addToCartBtn) {
+            if (quantity > 0) {
+                // Quantity is positive, show the "Add to Cart" button
+                addToCartBtn.style.display = 'inline-block';
+                document.getElementById('error-message').innerText = '';  // Clear any previous error messages
+            } else {
+                // Quantity is not positive, hide the "Add to Cart" button and show an error message
+                quantityInput.value = 1;
+                addToCartBtn.style.display = 'none';
+                document.getElementById('error-message').innerText = 'Please select a quantity greater than 0.';
+            }
+        });
+    }
+
+    function addItemToCart(itemId) {
+        // Implement functionality to add item to cart using AJAX
+        var quantity = document.getElementById('productQty').value;
+
+        // Prepare data to send in the AJAX request
+        var requestData = {
+            itemId: itemId,
+            quantity: quantity
+        };
+
+        // Send POST request using fetch API
+        fetch('/add-to-cart/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken') // Include CSRF token
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Handle response from server
+            console.log(data);
+            // You can update the UI or show a success message based on the response
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Handle any errors that occurred during the fetch
+        });
+    }
+
+    // Function to get CSRF token from cookies
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
 
 
 

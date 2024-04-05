@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from django.db.models.functions import TruncDate,TruncMonth, TruncYear
 from django.db.models import Count
 from django.utils.timezone import make_aware
+from mileapp.models import category
 
 
 
@@ -610,31 +611,30 @@ def admin_category_edit(request,id):
     }
     return render(request,'adminhome/category_edit.html', context)
 #=============================================sales_Report==============================================================
+@login_required(login_url='admin_login')
 def sales_report(request):
     if not request.user.is_superadmin:
-        return redirect (admin_login)
+        return redirect(admin_login)
     start_date_value = ""
     end_date_value = ""
-
     try:
-        orders=CartOrder.objects.filter(is_ordered=True)
-
+        orders=CartOrder.objects.filter(is_ordered= True).order_by('-created_at')
     except:
         pass
     if request.method == 'POST':
-        start_date =request.POST.get(start_date)
-        end_date = request.POST.get (end_date)
+       
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
         start_date_value = start_date
-        end_date_value =end_date
+        end_date_value = end_date
         if start_date and end_date:
+          
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
 
-            start_date=datetime.strptime(start_date,'%Y-%m-%d')
-            end_date=datetime.strptime(end_date,'%Y-%m-%d')
-
-
-            orders = orders.objects.filter(created_at_range=(start_date,end_date))
-
-
+           
+            orders = orders.filter(created_at__range=(start_date, end_date))
+   
     context={
         'orders':orders,
         'start_date_value':start_date_value,
@@ -874,3 +874,22 @@ def delete_category_offer(request,id):
     messages.warning(request,"Offer has been deleted successfully")
 
     return redirect('category-offers')
+
+#-----------------------------------------------------best seller products-----------------------------------------------------------
+
+def popular_products(request):
+    # Annotate each product with the count of orders and order them by count in descending order
+    popular_products = Product.objects.annotate(order_count=Count('productorder')).order_by('-order_count')[:5]
+    context = {'products': popular_products}
+    
+    return render(request, 'adminhome/popular_products.html', context)
+
+
+
+
+def popular_categories(request):
+    # Annotate each category with the count of orders for products in that category
+    best_seller_categories = category.objects.annotate(order_count=Count('product__productorder')).order_by('-order_count')[:5]
+    context = {'products': best_seller_categories}
+    
+    return render(request, 'adminhome/popular_categories.html', context)

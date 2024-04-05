@@ -52,8 +52,9 @@
                                     </td>
                                 
                                     <td class="text-center" data-title="Stock">
-                                        <input type="number"  class="form-control input-number quantity-input" data-item-id="{{ product.id }}" name="quantity_{{ product.id }}" value="{{ product.quantity }}" />
+                                        <input type="number" class="form-control input-number quantity-input" data-item-id="{{ product.id }}" name="quantity_{{ product.id }}" value="{{ product.quantity }}" min="1" />
                                     </td>
+                                    
                                 
                                     <td class="text-right price-cell" data-title="Cart">
                                         <p  data-item-id="{{ product.id }}" class="price-cell price">₹{{ product.total  }}</p>

@@ -97,7 +97,7 @@ def place_order(request):
     request.session.pop('totals')
     total = request.session.pop('total')
     request.session.pop('discounts')
-        
+      
     return redirect('pay:order_success')
 
 
@@ -111,30 +111,24 @@ def wallet_place_order(request):
         total = request.session.get('total', 0)
         request.session.get('discounts', 0)
 
-        user_addresses =items.first().address
-        coupons = []
-
-        for item in items:
-            coupon = item.coupon
-            coupons.append(coupon)
-        if coupons:
-            coupon = coupons[0]
-        else:
-            coupon = None
+        user_addresses = items.first().address
+        coupons = [item.coupon for item in items]
+        coupon = coupons[0] if coupons else None
 
         try:
             wallet = Wallet.objects.get(user=request.user)
             if total <= wallet.balance:
+                # Generate order number
                 short_id = str(random.randint(1000, 9999))
                 yr = datetime.now().year
                 dt = int(datetime.today().strftime('%d'))
                 mt = int(datetime.today().strftime('%m'))
                 d = datetime(yr, mt, dt).date()
                 current_date = d.strftime("%Y%m%d")
-                short_id = str(random.randint(1000, 9999))
                 order_numbers = current_date + short_id
 
-                var = CartOrder.objects.create(
+                # Create CartOrder instance
+                cart_order = CartOrder.objects.create(
                     user=request.user,
                     order_number=order_numbers,
                     order_total=total,
@@ -142,8 +136,8 @@ def wallet_place_order(request):
                     selected_address=user_addresses,
                     ip=request.META.get('REMOTE_ADDR')
                 )
-                var.save()
 
+                # Create Payment instance
                 payment_instance = Payments.objects.create(
                     user=request.user,
                     payment_id=f"PAYMENT-{timezone.now().strftime('%Y%m%d%H%M%S')}",
@@ -151,17 +145,17 @@ def wallet_place_order(request):
                     amount_paid=total,
                     status='paid',
                 )
+                
+                # Assign Payment instance to CartOrder
+                cart_order.payment = payment_instance
+                cart_order.save()
 
-                var.payment = payment_instance
-                var.save()
-
-                cart = CartItem.objects.filter(user=request.user)
-
-                for item in cart:
+                # Create ProductOrder instances
+                for item in CartItem.objects.filter(user=request.user):
                     orderedproduct = ProductOrder()
                     item.product.stock -= item.quantity
                     item.product.save()
-                    orderedproduct.order = var
+                    orderedproduct.order = cart_order
                     orderedproduct.payment = payment_instance
                     orderedproduct.user = request.user
                     orderedproduct.product = item.product.product
@@ -173,6 +167,7 @@ def wallet_place_order(request):
                     orderedproduct.save()
                     item.delete()
 
+                # Update wallet balance and create WalletHistory entry
                 wallet.balance -= total
                 wallet.save()
 
@@ -182,9 +177,14 @@ def wallet_place_order(request):
                     amount=total,
                     reason='Order Placement'
                 )
-                request.session.pop('applied_coupon_id',None)   
+
+                # Fetch wallet history in descending order of creation date
+                
+
+                # Clear session data
+                request.session.pop('applied_coupon_id', None)   
                 request.session.pop('totals', 0)
-                total = request.session.pop('total', 0)
+                request.session.pop('total', 0)
                 request.session.pop('discounts', 0)
 
                 return redirect('order_success')
@@ -194,17 +194,14 @@ def wallet_place_order(request):
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
             
         except Wallet.DoesNotExist:
-            print("except in the try")
             messages.error(request, 'Wallet not found for the user')
             return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
     except Exception as e:
         print(f"An error occurred: {e}")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
-    
 
 #===================================================checkout =================================================================================
-
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url='user_login')
@@ -214,12 +211,11 @@ def checkout(request):
     user_addresses = Address.objects.filter(users=request.user)
     
     address_form = AddressForm(request.POST or None)
-    cart =CartItem.objects.filter(user=request.user).first()
-    cartval =CartItem.objects.filter(user=request.user)
+    cart = CartItem.objects.filter(user=request.user).first()
+    cartval = CartItem.objects.filter(user=request.user)
     total = 0
     for i in cartval:
         total += i.get_subtotal()
-
 
     if request.session.get('order_placed', False):
         del request.session['order_placed']
@@ -229,13 +225,10 @@ def checkout(request):
         if 'use_existing_address' in request.POST:
             selected_address_id = request.POST.get('existing_address')
             selected_address = get_object_or_404(Address, id=selected_address_id)
-            # Update the address for all CartItems in the user's cart
-
             return render(request, 'payment/payment.html', {
                 'selected_address': selected_address,
                 'items': items,
-                'total': total - int(cart.coupon.discount)* 100 // 2 if cart.coupon else total,
-
+                'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
             })
         
         elif address_form.is_valid():
@@ -246,15 +239,22 @@ def checkout(request):
             return render(request, 'payment/payment.html', {
                 'new_address': address_instance,
                 'items': items,
-                'coupon':cart.coupon,
-                'total': total - (cart.coupon.discount * 100)//2,
-                'cart_subtotal':total
+                'coupon': cart.coupon,
+                'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
+                'cart_subtotal': total
             })
-    
-    return render(request, 'payment/checkout.html', {'user_addresses': user_addresses, 'items': items,'coupon':cart.coupon if cart else None,
-                                                      'total': (total - (cart.coupon.discount * 100)//2) if cart.coupon else total,
-                                                      'cart_subtotal':total })
 
+    # Apply discount if cart has a coupon
+    if cart and cart.coupon:
+        total -= (cart.coupon.discount * 100)//2
+    
+    return render(request, 'payment/checkout.html', {
+        'user_addresses': user_addresses,
+        'items': items,
+        'coupon': cart.coupon if cart else None,
+        'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
+        'cart_subtotal': total
+    })
 #=========================================================payment with razorpay============================================================================
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)

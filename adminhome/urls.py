@@ -50,6 +50,8 @@ urlpatterns = [
     path('edit-category-offers/<int:id>',views.edit_category_offers, name='edit-category-offers'), 
     path('create-category-offer/',views.create_category_offer, name='create-category-offer'),
     path('delete-category-offer/<int:id>/',views.delete_category_offer, name='delete-category-offer'),
+    path('popular_products/',views.popular_products,name='popular_products'),
+    path('popular_categories/<int:category_id>/',views.popular_categories,name='popular_categories'),
     
     
 

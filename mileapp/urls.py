@@ -51,7 +51,7 @@ urlpatterns = [
 
 
     path('search/',views.search,name='search'),
-    path('popular/',views.popularity,name='popular'),
+    path('popularity/',views.popularity,name='popularity'),
     
 
 

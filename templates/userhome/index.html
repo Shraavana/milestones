@@ -78,7 +78,8 @@
                             <button class="nav-link active" id="nav-tab-one" data-bs-toggle="tab" data-bs-target="#tab-one" type="button" role="tab" aria-controls="tab-one" aria-selected="true">Featured</button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="nav-tab-two" data-bs-toggle="tab" href="{% url 'indexuser:popularity'% }" role="tab" aria-controls="tab-two" aria-selected="false">Popular</a>
+                            {% comment %} <a  id="nav-tab-two" data-bs-toggle="tab" href="{% url 'indexuser:popularity' %}" role="tab" aria-controls="tab-two" aria-selected="false">Popular</a> {% endcomment %}
+                            <a class="nav-link" href="{% url 'indexuser:popularity' %}">Popular</a>
                         </li>
                         
                         <li class="nav-item" role="presentation">
