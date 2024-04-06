@@ -23,7 +23,6 @@ razorpay_client = razorpay.Client(
 def place_order(request):
     user = request.user 
     items = CartItem.objects.filter(user=user, is_deleted=False)
-    print(f'fgwefgsfgsfg {items}')
     request.session.get('applied_coupon_id', None)  
     request.session.get('totals', 0)
     total = request.session.get('total', 0)
@@ -202,6 +201,12 @@ def wallet_place_order(request):
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 #===================================================checkout =================================================================================
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache, cache_control
+from .models import CartItem, Address, Wallet
+from .forms import AddressForm
+
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url='user_login')
@@ -217,6 +222,9 @@ def checkout(request):
     for i in cartval:
         total += i.get_subtotal()
 
+    # Fetch the wallet information
+    wallet, _ = Wallet.objects.get_or_create(user=user, defaults={'balance': 0})
+    
     if request.session.get('order_placed', False):
         del request.session['order_placed']
         return redirect('indexuser:user_index')  
@@ -229,6 +237,7 @@ def checkout(request):
                 'selected_address': selected_address,
                 'items': items,
                 'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
+                'wallet': wallet,  # Pass the wallet information to the payment page
             })
         
         elif address_form.is_valid():
@@ -241,7 +250,8 @@ def checkout(request):
                 'items': items,
                 'coupon': cart.coupon,
                 'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
-                'cart_subtotal': total
+                'cart_subtotal': total,
+                'wallet': wallet,  # Pass the wallet information to the payment page
             })
 
     # Apply discount if cart has a coupon
@@ -253,8 +263,10 @@ def checkout(request):
         'items': items,
         'coupon': cart.coupon if cart else None,
         'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
-        'cart_subtotal': total
+        'cart_subtotal': total,
+        'wallet': wallet,  # Pass the wallet information to the checkout page
     })
+
 #=========================================================payment with razorpay============================================================================
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)

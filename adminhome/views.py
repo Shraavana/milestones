@@ -16,6 +16,8 @@ from django.db.models.functions import TruncDate,TruncMonth, TruncYear
 from django.db.models import Count
 from django.utils.timezone import make_aware
 from mileapp.models import category
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+
 
 
 
@@ -611,37 +613,49 @@ def admin_category_edit(request,id):
     }
     return render(request,'adminhome/category_edit.html', context)
 #=============================================sales_Report==============================================================
+
 @login_required(login_url='admin_login')
 def sales_report(request):
     if not request.user.is_superadmin:
-        return redirect(admin_login)
+        return redirect('admin_login')
+    
     start_date_value = ""
     end_date_value = ""
+    
     try:
-        orders=CartOrder.objects.filter(is_ordered= True).order_by('-created_at')
+        orders = CartOrder.objects.filter(is_ordered=True).order_by('-created_at')
     except:
         pass
+    
     if request.method == 'POST':
-       
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
         start_date_value = start_date
         end_date_value = end_date
+        
         if start_date and end_date:
-          
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
-
-           
             orders = orders.filter(created_at__range=(start_date, end_date))
-   
-    context={
-        'orders':orders,
-        'start_date_value':start_date_value,
-        'end_date_value':end_date_value
+    
+    # Pagination
+    paginator = Paginator(orders, 10)  # Show 10 orders per page
+    page_number = request.GET.get('page')
+    try:
+        orders = paginator.page(page_number)
+    except PageNotAnInteger:
+        orders = paginator.page(1)
+    except EmptyPage:
+        orders = paginator.page(paginator.num_pages)
+    
+    context = {
+        'orders': orders,
+        'start_date_value': start_date_value,
+        'end_date_value': end_date_value
     }
 
-    return render(request,'adminhome/sales_report.html',context)
+    return render(request, 'adminhome/sales_report.html', context)
+
 
 #============================================= add and delete the product offer ==================================================================================================================================================================
 @login_required(login_url='admin_login')

@@ -106,17 +106,7 @@
                                     </tr>
                                     {% endfor %}
                                 </form>
-                                {% comment %} <tr>
-                                    <td class="cart_total_label">cart</td>
-                                    <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{item.total}}</td>
-                                  </tr>
-
-                                <tr>
-                                    <td class="cart_total_label">Coupen Descount</td>
-                                    <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{coupon.discount}}  %   OFF</td>
-                                  </tr>
-                                   
-                                    <tr> {% endcomment %}
+                                
                                         <th>Total</th>
                                         <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹{{total }}</span></td>
                                     </tr>
@@ -132,16 +122,18 @@
                                <div>
                                 <!-- Add any additional fields if needed -->
                                 
-                                <button type="submit" class="btn btn-primary" disabled>Wallet</button>
+                                <button type="submit" class="btn btn-danger" disabled>Wallet</button>
+                                <p> <strong> <h4>Wallet Balance: ₹{{wallet.balance}}</h4> </strong></p>
                                 <p>insufficent balance </p>
                             </div>
                             
                         {% else %}
                             <!-- Allow the user to use the wallet -->
                             <form method="post" action="{% url 'pay:wallet_place_order' %}" id="wallet-form">
-                                {% csrf_token %}
+                                {% csrf_token %} 
                                 <!-- Add any additional fields if needed -->
                                 <button type="submit" class="btn btn-primary">Wallet</button>
+                                <p> <strong> <h4>Wallet Balance: ₹{{wallet.balance}}</h4> </strong></p>
                             </form>
                         {% endif %}
 

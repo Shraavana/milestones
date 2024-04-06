@@ -58,10 +58,10 @@
                 <td>{{order.created_at}}</td>
                 <td>{{order.order_number}}</td>
                 <td>{{order.user.username}}</td>
-                {%if order.coupen != None%}
+                {%if order.coupen %}
                 <td>{{order.coupen}}</td>
                 {% else %}
-                <td>{{order.coupen}}</td>
+                <td></td>
                 {% endif %}
                 <td>{{order.order_total}}</td>
                 <td>{{order.payment.payment_method}}</td>
@@ -72,14 +72,46 @@
     </tbody>
 </table>
 
+<!-- Pagination -->
+<nav aria-label="Page navigation example">
+  <ul class="pagination">
+    {% if orders.has_previous %}
+    <li class="page-item">
+      <a class="page-link" href="?page=1" aria-label="First">
+        <span aria-hidden="true">&laquo;&laquo;</span>
+      </a>
+    </li>
+    <li class="page-item">
+      <a class="page-link" href="?page={{ orders.previous_page_number }}" aria-label="Previous">
+        <span aria-hidden="true">&laquo;</span>
+      </a>
+    </li>
+    {% endif %}
+    {% for num in orders.paginator.page_range %}
+    <li class="page-item{% if num == orders.number %} active{% endif %}">
+      <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+    </li>
+    {% endfor %}
+    {% if orders.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="?page={{ orders.next_page_number }}" aria-label="Next">
+        <span aria-hidden="true">&raquo;</span>
+      </a>
+    </li>
+    <li class="page-item">
+      <a class="page-link" href="?page={{ orders.paginator.num_pages }}" aria-label="Last">
+        <span aria-hidden="true">&raquo;&raquo;</span>
+      </a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
 
 </div> 
 
-
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
 
 <script>
 function exportToPDF() {
@@ -89,7 +121,7 @@ function exportToPDF() {
       filename: 'sales_report.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'Landscape' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
     };
 
     html2pdf().from(element).set(opt).save();
@@ -103,6 +135,6 @@ function exportToPDF() {
       type: 'base64'
     });
     XLSX.writeFile(fp, 'test.xlsx');
-    }
+  }
 </script>
 {% endblock %}

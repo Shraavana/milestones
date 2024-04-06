@@ -396,6 +396,7 @@ def add_to_cart(request):
     if request.method == 'POST':
         product_id = request.POST.get('item_id')
         color_name = request.POST.get('product_color')
+        print(f'{color_name} nsadkfaksfhnas;fah')
         qty = int(request.POST.get('quantity'))  
 
         try:
@@ -680,7 +681,7 @@ def user_account(request):
         print(order.product_image)
     
 
-    wallet, created = Wallet.objects.get_or_create(user=request.user, defaults={'balance': 0})
+    wallet = Wallet.objects.get_or_create(user=request.user, defaults={'balance': 0})
     
 
     wallethistory =  WalletHistory.objects.filter(wallet=wallet).order_by('-created_at')

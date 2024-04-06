@@ -10,12 +10,14 @@ class Address(models.Model):
     users = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     phone = models.CharField(max_length=12)
-    address = models.CharField(max_length=200)
+    address = models.TextField(max_length=200)
     district = models.CharField(max_length=255)
     pincode = models.CharField(max_length=6)
 
     def __str__(self):
         return self.name
+    def get_address(self):
+        return f'{self.name}, {self.address}, {self.district}, {self.pincode}'
     
 class CartItem(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
