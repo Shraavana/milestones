@@ -142,8 +142,8 @@ class ProductAttribute(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     color = models.ForeignKey(Color, on_delete=models.CASCADE)
     price = models.PositiveIntegerField()
-    old_price = models.PositiveIntegerField(default=0)
-    stock = models.IntegerField(default=0)
+    old_price = models.PositiveIntegerField()
+    stock = models.IntegerField()
     is_available=models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
     image = models.ImageField(upload_to='photo/product_images',

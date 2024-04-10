@@ -110,11 +110,12 @@ def wallet_place_order(request):
         total = request.session.get('total', 0)
         request.session.get('discounts', 0)
 
-        user_addresses = items.first().address
+        user_addresses = items[0].address
         coupons = [item.coupon for item in items]
         coupon = coupons[0] if coupons else None
 
         try:
+            print('in the second try')
             wallet = Wallet.objects.get(user=request.user)
             if total <= wallet.balance:
                 # Generate order number
@@ -144,7 +145,7 @@ def wallet_place_order(request):
                     amount_paid=total,
                     status='paid',
                 )
-                
+                print(f'the payment {payment}')
                 # Assign Payment instance to CartOrder
                 cart_order.payment = payment_instance
                 cart_order.save()
@@ -164,6 +165,7 @@ def wallet_place_order(request):
                     orderedproduct.variations = product_attribute
                     orderedproduct.ordered = True
                     orderedproduct.save()
+                    print(f'the product for loop {item}')
                     item.delete()
 
                 # Update wallet balance and create WalletHistory entry
@@ -186,7 +188,7 @@ def wallet_place_order(request):
                 request.session.pop('total', 0)
                 request.session.pop('discounts', 0)
 
-                return redirect('order_success')
+                return redirect('pay:order_success')
 
             else:
                 messages.error(request, 'Wallet balance is less than the total amount')
@@ -368,7 +370,7 @@ def online_place_order(request):
     request.session.get('discounts', 0)
 
     
-    user_addresses = items.first().address
+    user_addresses = items[0].address
    
     coupons = []
 
@@ -444,7 +446,7 @@ def order_success(request):
     order = CartOrder.objects.filter(user=request.user).order_by('-id').first()
     print(order) 
     product_orders = ProductOrder.objects.filter(order=order)
-    
+    address = order.selected_address
     
     request.session['order_placed'] = True
     context = {
@@ -452,6 +454,7 @@ def order_success(request):
         'order_number': order.order_number,
         'order_status': order.status,
         'product_orders': product_orders,
+        'address':address
     }
     return render(request,'payment/orderdetail.html',context)
 

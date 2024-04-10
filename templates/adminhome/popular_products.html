@@ -41,13 +41,7 @@
                                 <h2 class="card-title">
                                     <a href="{% url 'indexuser:products_by_category' category_id=product.category.id %}">{{ product.product_name }}</a>
                                 </h2>
-                                <div class="rating-result" title="90%">
-                                    <span><span>90%</span></span>
-                                </div>
-                                <div class="product-price">
-                                    <span class="product-price1">{{ product.productattribute_set.first.price }}</span>
-                                    <span class="old-price">{{ product.offer_price }}</span>
-                                </div>
+                                
                             </div>
                         </div>
                     </div>

@@ -396,7 +396,7 @@ def add_to_cart(request):
     if request.method == 'POST':
         product_id = request.POST.get('item_id')
         color_name = request.POST.get('product_color')
-        print(f'{color_name} nsadkfaksfhnas;fah')
+
         qty = int(request.POST.get('quantity'))  
 
         try:
@@ -429,7 +429,7 @@ def add_to_cart(request):
             cart_item.total = product.price * cart_item.quantity
             cart_item.save()
         except CartItem.DoesNotExist:
-            item, created = CartItem.objects.get_or_create(user=user, product=product,address=address, defaults={'is_deleted': False})
+            item, created = CartItem.objects.get_or_create(user=user, product=product,address=address.get_address(), defaults={'is_deleted': False})
             item.quantity = qty
             item.total = product.price * qty
             item.save()
@@ -456,7 +456,7 @@ def add_to_cart(request):
 def cart_list(request):
     user = request.user
     items = CartItem.objects.filter(user=user, is_deleted=False)
-    coupons = Coupon.objects.all()
+    coupons = Coupon.objects.filter(active=True)
     ct = items.count()
 
     total_without_discount = items.aggregate(total_sum=Sum('total'))['total_sum'] or 0
@@ -681,10 +681,13 @@ def user_account(request):
         print(order.product_image)
     
 
-    wallet = Wallet.objects.get_or_create(user=request.user, defaults={'balance': 0})
+    Wallet.objects.get_or_create(user=request.user)
+    wallet = Wallet.objects.get(user = request.user)
     
 
     wallethistory =  WalletHistory.objects.filter(wallet=wallet).order_by('-created_at')
+    for i in user_address:
+        print(f'fasdfjasjfasl {i}')
     context={
         'user_address':user_address,
         'user_data' :request.user,

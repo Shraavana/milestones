@@ -77,16 +77,10 @@ def admin_index(request):
             .annotate(order_count=Count('id'))
             .order_by('created_at')
         )
-    print(f'daily orrderr {daily_order_counts}')
-    print('SQL Query:', daily_order_counts.query)
+
     dates = [entry['created_at'].strftime('%Y-%m-%d') for entry in daily_order_counts]
     counts = [entry['order_count'] for entry in daily_order_counts]
-    print('Daily Chart Data:')
-    print('Dates:', [entry['created_at'] for entry in daily_order_counts])
-    print('Counts:', [entry['order_count'] for entry in daily_order_counts])
-    print(dates)
-    print(counts)
-
+    
 
     end_date = timezone.now()
     start_date = end_date - timedelta(days=365) 
@@ -480,10 +474,11 @@ def delete_coupon(request,id):
     
     try:
         coupon= get_object_or_404(Coupon, id=id)
+        coupon.delete()
+        messages.warning(request,"Coupon has been deleted successfully")
     except ValueError:
         return redirect('admin_coupon')
-    coupon.delete()
-    messages.warning(request,"Coupon has been deleted successfully")
+
 
     return redirect('admin_coupon')  
 
@@ -511,6 +506,7 @@ def order(request):
     }
     return render(request, 'adminhome/order.html',context)
 #=============================================================order items====================================================================
+
 @login_required(login_url='admin_login')
 def order_items(request, order_number):
     if not request.user.is_superadmin:
@@ -524,7 +520,7 @@ def order_items(request, order_number):
     order_items = ProductOrder.objects.filter(order=order)
     address = order.selected_address
     payment = Payments.objects.all()
-
+    
     if request.method == "POST":
         form = OrderForm(request.POST, instance=order)
         if form.is_valid():
@@ -545,9 +541,11 @@ def order_items(request, order_number):
         'address': address,
         'order_items': order_items,
         'form': form,
-        'payment': payment
+        'payment': payment,
+        
     }
     return render(request, 'adminhome/order_items.html', context)
+
 #=========================================================order cancel==============================================
 @login_required(login_url='admin_login')
 def cancell_order(request, order_number):
@@ -893,7 +891,7 @@ def delete_category_offer(request,id):
 
 def popular_products(request):
     # Annotate each product with the count of orders and order them by count in descending order
-    popular_products = Product.objects.annotate(order_count=Count('productorder')).order_by('-order_count')[:5]
+    popular_products = Product.objects.annotate(order_count=Count('productorder')).order_by('-order_count')[:3]
     context = {'products': popular_products}
     
     return render(request, 'adminhome/popular_products.html', context)
@@ -903,7 +901,8 @@ def popular_products(request):
 
 def popular_categories(request):
     # Annotate each category with the count of orders for products in that category
-    best_seller_categories = category.objects.annotate(order_count=Count('product__productorder')).order_by('-order_count')[:5]
+    best_seller_categories = category.objects.annotate(order_count=Count('product__productorder')).order_by('-order_count')[:2]
+    
     context = {'products': best_seller_categories}
     
     return render(request, 'adminhome/popular_categories.html', context)

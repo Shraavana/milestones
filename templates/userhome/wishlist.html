@@ -13,10 +13,7 @@
             <a href="{% url 'indexuser:user_index' %}" class="btn">Continue Shopping</a>
         </div>
     </div>
-        
-        
     {% else %}
-
     <section class="mt-50 mb-50">
         <div class="container">
             <div class="row">
@@ -47,12 +44,21 @@
                                         <a href="{% url 'indexuser:product_details' product_id=wishlist_item.product.id  %}" class="btn btn-sm">View</a>
                                     </td>
                                     <td class="action" data-title="Add To Cart"> <!-- New column added for Add to Cart -->
-                                        <div class="product-color primary-color float-left">
-                                            <input type="hidden" id="product-color{{ forloop.counter }}" class='product-color{{ forloop.counter }}' value="{{ wishlist_item.product.productattribute_set.first.color }}">
+                                        <div class="detail-extralink">
+                                            <form method="POST" action="{% url 'indexuser:add_to_cart' %}">
+                                                {% csrf_token %}
+                                                <input type="number" value="1" class="form-control" id="productQty" min="1" oninput="updateAddToCartButton()" name="quantity" />
+                                                <div class="input-group-append">
+                                                    <input type="hidden" class="product-image-one" value="{{ wishlist_item.product.productattribute_set.first.image.url }}"/>
+                                                    <input type="hidden" class="product-id" value="{{ wishlist_item.product.id }}"/>
+                                                    <input type="hidden" class="product-name" value="{{ wishlist_item.product.product_name }}"/>
+                                                    <div class="product-color primary-color float-left">
+                                                        <input type="hidden" id="product-color1" class='product-color1' value="{{ wishlist_item.product.productattribute_set.first.color }}">
+                                                    </div>
+                                                    <button type="submit" class="addtocart" data-item-id="{{ wishlist_item.product.id }}">Add To Cart</button>
+                                                </div>
+                                            </form>
                                         </div>
-                                        <button class="addtocart" data-item-id="{{ wishlist_item.product.id }}">Add To Cart</button>
-                                        <!-- Optional: Display quantity input -->
-                                      
                                     </td>
                                     <td class="action" data-title="Remove">
                                         <a href="#" class="delete-wishlist" data-wishlist-id="{{ wishlist_item.id }}">
@@ -68,7 +74,6 @@
             </div>
         </div>
     </section>
-    
     {% endif %}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -101,96 +106,57 @@
     }
 </script>
 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var addToCartBtns = document.querySelectorAll('.addtocart');
+    $(document).ready(function() {
+        $(".addtocart").click(function(event) {
+            event.preventDefault();
 
-        addToCartBtns.forEach(function(addToCartBtn) {
-            addToCartBtn.addEventListener('click', function(event) {
-                event.preventDefault(); // Prevent the default form submission
-                
-                // Extract item ID from the button's data-item-id attribute
-                var itemId = addToCartBtn.getAttribute('data-item-id');
-                
-                // Call function to add item to cart
-                addItemToCart(itemId);
+            var itemId = $(this).data("item-id");
+            var quantity = $("#productQty").val(); // Get the quantity value
+            var productColor = $("#product-color1").val();
+
+            $.ajax({
+                type: 'POST',
+                url: '/add_to_cart/',
+                data: {
+                    item_id: itemId,
+                    quantity: quantity,
+                    product_color: productColor, 
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                dataType: 'json',
+                success: function(response) {
+                    console.log("AJAX Request Success");
+
+                    var cartCountElement = $(".cart-count");
+                    cartCountElement.text(response.cart_count);
+                    cartCountElement.attr("data-cart-count", response.cart_count);
+
+                   
+                    // Clear previous messages
+                    $("#success-message").empty().hide();
+                    $("#error-message").empty().hide();
+
+                    if (response.status === 'success') {
+                        // Update success message
+                        $("#success-message").text(response.message).show();;
+                    } else {
+                        // Update error message
+                        $("#error-message").text(response.message).show();;
+                    }
+                    
+                     
+                },
+                error: function(error) {
+                    console.error('Error during AJAX request:', error);
+                    console.log("AJAX Request Error");
+                    $(".messages").show();
+                    $(".messages").text('Error during AJAX request. Please try again.');
+                }
             });
         });
-
-        // Call this function to initially update the "Add to Cart" buttons
-        updateAddToCartButtons();
     });
-
-    function updateAddToCartButtons() {
-        var quantityInput = document.getElementById('productQty');
-        var quantity = parseInt(quantityInput.value, 10);
-
-        var addToCartBtns = document.querySelectorAll('.addtocart');
-
-        addToCartBtns.forEach(function(addToCartBtn) {
-            if (quantity > 0) {
-                // Quantity is positive, show the "Add to Cart" button
-                addToCartBtn.style.display = 'inline-block';
-                document.getElementById('error-message').innerText = '';  // Clear any previous error messages
-            } else {
-                // Quantity is not positive, hide the "Add to Cart" button and show an error message
-                quantityInput.value = 1;
-                addToCartBtn.style.display = 'none';
-                document.getElementById('error-message').innerText = 'Please select a quantity greater than 0.';
-            }
-        });
-    }
-
-    function addItemToCart(itemId) {
-        // Implement functionality to add item to cart using AJAX
-        var quantity = document.getElementById('productQty').value;
-
-        // Prepare data to send in the AJAX request
-        var requestData = {
-            itemId: itemId,
-            quantity: quantity
-        };
-
-        // Send POST request using fetch API
-        fetch('/add-to-cart/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken') // Include CSRF token
-            },
-            body: JSON.stringify(requestData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Handle response from server
-            console.log(data);
-            // You can update the UI or show a success message based on the response
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            // Handle any errors that occurred during the fetch
-        });
-    }
-
-    // Function to get CSRF token from cookies
-    function getCookie(name) {
-        var cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            var cookies = document.cookie.split(';');
-            for (var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i].trim();
-                // Does this cookie string begin with the name we want?
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
 </script>
-
-
-
 
 {% endblock %}

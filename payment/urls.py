@@ -16,9 +16,6 @@ urlpatterns = [
     path('online_place_order', views.online_place_order, name='online_place_order'),
     path('wallet_place_order', views.wallet_place_order, name='wallet_place_order'),
     path('invoice/<int:order_id>/', views.invoice, name='invoice'),
-
-    
-    
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_URL)

@@ -25,8 +25,8 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     total=models.BigIntegerField(null=True)
     timestamp = models.DateTimeField(default=timezone.now,null=True)
-    address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
-    coupon=models.ForeignKey(Coupon, on_delete=models.CASCADE, null=True, blank=True)
+    address = models.TextField(null=True)
+    coupon=models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
@@ -45,6 +45,7 @@ class Payments(models.Model):
     payment_choices=(
         ('COD','Cash on Delivery'),
         ('Razorpay','Razorpay'),
+       
     )
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -78,8 +79,8 @@ class CartOrder(models.Model):
     is_ordered=models.BooleanField(default=True)
     created_at = models.DateTimeField(default=timezone.now, editable=True)
     updated_at=models.DateTimeField(auto_now=True)
-    selected_address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
-    coupen=models.ForeignKey(Coupon, on_delete=models.CASCADE, null=True, blank=True)
+    selected_address = models.TextField(blank=True, null=True)
+    coupen=models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "Cart Order"
