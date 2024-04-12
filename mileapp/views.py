@@ -24,6 +24,9 @@ from .models import Product,category,User,ProductImages,ProductAttribute,Color,W
 from mileapp.models import category
 from payment.models import Wallet,WalletHistory
 from adminhome.models import ProductOffer,CategoryOffer
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+import string
 #===============================user index==============================================================================================================================================================
 
 from django.db.models import F
@@ -106,30 +109,60 @@ def signup(request):
     return render(request,'userhome/usersignup.html')
 #=================================================================changepassword===========================================================
 @login_required
+
+
 def change_password(request):
     if request.method == 'POST':
         current_password = request.POST.get('current_password')
-        print(f'Entered password: {current_password}')
-        print(f'Stored password: {request.user.password}')
         new_password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')
 
+        # Check if the current password is correct
         if not request.user.check_password(current_password):
             messages.error(request, 'Incorrect current password. Please try again.')
             return redirect('change_password')
-        
+
+        # Custom password validation function
+        # Check if the password length is at least 8 characters
+        if len(new_password) < 8:
+            messages.error(request, 'Password must be at least 8 characters long.')
+            return redirect('indexuser:change_password')
+
+        # Check if the password contains at least one special character
+        special_characters = set(string.punctuation)
+        if not any(char in special_characters for char in new_password):
+            messages.error(request, 'Password must contain at least one special character.')
+            return redirect('indexuser:change_password')
+
+        # Check if the password contains any whitespace characters
+        if ' ' in new_password:
+            messages.error(request, 'Password cannot contain whitespace characters.')
+            return redirect('indexuser:change_password')
+
+        # Validate the new password
+        try:
+            validate_password(new_password, user=request.user)
+        except ValidationError as e:
+            messages.error(request, e)
+            return redirect('indexuser:change_password')
+
+        # Check if new password matches the confirmation
         if new_password != confirm_password:
             messages.error(request, 'New password and confirmation do not match. Please try again.')
-            return redirect('change_password')
+            return redirect('indexuser:change_password')
 
+        # Set the new password and save
         request.user.set_password(new_password)
         request.user.save()
 
+        # Update session auth hash
         update_session_auth_hash(request, request.user)
 
-        messages.success(request, 'Your password was successfully updated!')
+        # Logout the user for security reasons
         logout(request)
-        return redirect('indexuser:user_logout') 
+
+        # Redirect to the logout page
+        return redirect('indexuser:user_logout')
 
     return render(request, 'userhome/change_password.html')
 
@@ -831,33 +864,77 @@ def return_order(request,order_number):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 #================================ useraccount edit and save  ===========================================================================================================================================
+def add_address(request):
+    if request.method=='POST':
+        form = AddressForm(request.POST,request.FILES)
+        if form.is_valid():
+            address=form.save(commit=False)
+            address.users = request.user
+            address.save()
+            return redirect('indexuser:user_account')
+    else:
+        form=AddressForm()
+    context={
+        'form':form
+    }
+    return render(request, 'userhome/add_address.html',context)
+
 @login_required(login_url='user_login')
 def edit_user(request):
     if request.method == 'POST':
-        first_name = request.POST.get('name', '')
-        last_name = request.POST.get('phone', '')  # Assuming 'phone' is for last name in your form
-        email = request.POST.get('email', '')
-        
-        # Fetch the currently logged in user
-        user = request.user
-        
-        # Update user's information
-        user.first_name = first_name
-        user.last_name = last_name
-        user.email = email
-        print(first_name)
-        print(last_name)
-        
-        try:
-            user.full_clean()  # Perform model validation
-            user.save()  # Save user data
+        form = AddressForm(request.POST, instance=request.user)
+        if form.is_valid():
+            # Cleaned data from form
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            email = form.cleaned_data['email']
+
+            # Validate first name, last name, and email
+            if not first_name.isalpha():
+                messages.error(request, 'First name must contain only letters.')
+                return redirect('indexuser:user_account')
+            if not last_name.isalpha():
+                messages.error(request, 'Last name must contain only letters.')
+                return redirect('indexuser:user_account')
+            if ' ' in email:
+                messages.error(request, 'Email address cannot contain whitespace.')
+                return redirect('indexuser:user_account')
+
+            # Update user's information
+            form.save()
             messages.success(request, 'Your account details have been updated successfully.')
             return redirect('indexuser:user_account')
-        except Exception as e:
-            messages.error(request, f'Error updating account details: {str(e)}')
-            return redirect('indexuser:user_account')  # Redirect to user_account page with error message
+
+    else:
+        form = AddressForm(instance=request.user)
+
+    return render(request, 'userhome/user_account.html', {'form': form})
+# def edit_user(request):
+#     if request.method == 'POST':
+#         first_name = request.POST.get('firstname', '')
+#         last_name = request.POST.get('lastname', '')  # Assuming 'phone' is for last name in your form
+#         email = request.POST.get('email', '')
+        
+#         # Fetch the currently logged in user
+#         user = request.user
+        
+#         # Update user's information
+#         user.first_name = first_name
+#         user.last_name = last_name
+#         user.email = email
+#         print(first_name)
+#         print(last_name)
+        
+#         try:
+#             user.full_clean()  # Perform model validation
+#             user.save()  # Save user data
+#             messages.success(request, 'Your account details have been updated successfully.')
+#             return redirect('indexuser:user_account')
+#         except Exception as e:
+#             messages.error(request, f'Error updating account details: {str(e)}')
+#             return redirect('indexuser:user_account')  # Redirect to user_account page with error message
     
-    return redirect('indexuser:user_account')
+#     return redirect('indexuser:user_account')
 
 #===========================================================wishlist=========================================================================
 

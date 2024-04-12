@@ -23,7 +23,6 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 
 #=======================================admin login=================================================================================================================================
 @never_cache
-@login_required(login_url='admin_login')
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 def admin_login(request):
     if request.method == 'POST':

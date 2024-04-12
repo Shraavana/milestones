@@ -10,7 +10,7 @@ class OrderForm(forms.ModelForm):
         model = CartOrder
         fields = ['status']
         widgets = {
-            'status': forms.Select(attrs={'class': 'form-control'})  # Apply attrs to the Select widget
+            'status': forms.Select(attrs={'class': 'form-control'})  
         }
 
 
