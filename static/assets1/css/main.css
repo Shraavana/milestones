@@ -175,6 +175,10 @@ input:focus::-moz-placeholder {
     color: #838383
 }
 
+.body{
+    background-color: white;
+}
+
 :-ms-input-placeholder {
     color: #838383
 }

@@ -5,9 +5,35 @@ from .models import User, category, Brand, Color, Product, ProductImages,Product
 from django.core.exceptions import ValidationError
 
 class SignUpForm(UserCreationForm):
+    first_name = forms.CharField(max_length=30, required=True)
+    last_name = forms.CharField(max_length=30, required=True)
+    email = forms.EmailField(max_length=254, required=True)
+
     class Meta:
-        model= User
-        fields=['username','first_name','last_name','email','phone','password']
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email', 'phone', 'password']
+
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name')
+        if len(first_name.strip()) < 3:
+            raise ValidationError("First name should contain at least 3 letters.")
+        if ' ' in first_name:
+            raise ValidationError("First name should not contain white space.")
+        return first_name
+
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name')
+        if len(last_name.strip()) < 1:
+            raise ValidationError("Last name should contain at least 1 letter.")
+        if ' ' in last_name:
+            raise ValidationError("Last name should not contain white space.")
+        return last_name
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if ' ' in email:
+            raise ValidationError("Email should not contain white space.")
+        return email
     
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -56,7 +82,7 @@ class ProductAttributeForm(forms.ModelForm):
 
     class Meta:
         model = ProductAttribute
-        fields = ['product', 'color', 'price', 'stock', 'image', 'is_deleted', 'is_available']
+        fields = ['product', 'color', 'price', 'old_price', 'stock', 'image', 'is_deleted', 'is_available']
 
     def clean_image(self):
         image = self.cleaned_data.get('image')
@@ -78,22 +104,20 @@ class ProductAttributeForm(forms.ModelForm):
         return price
     def clean_stock(self):
         stock = self.cleaned_data.get('stock')
-        if stock < 0:
-            raise forms.ValidationError('Stock cannot be negative.')
+        if stock <= 0:
+            raise forms.ValidationError('Stock must be a positive number.')
         return stock
-    
 
-class ProductAttributeForm(forms.ModelForm):
-    def __init__(self,*args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field_name, field in self.fields.items():
-            field.widget.attrs['class'] = 'form-control'
-            # Check if the field is a BooleanField and customize its rendering
-            if isinstance(field, forms.BooleanField):
-                field.widget = forms.CheckboxInput(attrs={'class': 'form-check-input'})
+
+class UserProfileForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=30, required=True)
+    last_name = forms.CharField(max_length=30, required=True)
+    email = forms.EmailField(max_length=254, required=True)
+
     class Meta:
-        model=ProductAttribute
-        fields=['product','color','price','stock','image','is_deleted','is_available']
+        model = User
+        fields = [ 'first_name','last_name','email']
+    
 
 
 

@@ -27,6 +27,26 @@ from adminhome.models import ProductOffer,CategoryOffer
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 import string
+
+from .forms import UserProfileForm
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.models import User
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from django.template.loader import render_to_string
+from mileapp.models import User
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+from django.urls import reverse
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+
+
+
+
 #===============================user index==============================================================================================================================================================
 
 from django.db.models import F
@@ -92,9 +112,9 @@ def signup(request):
         send_mail(
             'OTP verification',
             f'your OTP for signup is : {otp}',
-            'timetrixcronico@gmail.com',
+            'yourseamlesslife@gmail.com',
             [email],
-            fail_silently=True
+            fail_silently=False
         )
         request.session['signup_details']={
             'username': username,
@@ -119,43 +139,45 @@ def change_password(request):
 
         # Check if the current password is correct
         if not request.user.check_password(current_password):
-            messages.error(request, 'Incorrect current password. Please try again.')
+            messages.warning(request, 'Incorrect current password. Please try again.')
             return redirect('change_password')
 
         # Custom password validation function
         # Check if the password length is at least 8 characters
         if len(new_password) < 8:
-            messages.error(request, 'Password must be at least 8 characters long.')
+            messages.warning(request, 'Password must be at least 8 characters long.')
             return redirect('indexuser:change_password')
 
         # Check if the password contains at least one special character
         special_characters = set(string.punctuation)
         if not any(char in special_characters for char in new_password):
-            messages.error(request, 'Password must contain at least one special character.')
+            messages.warning(request, 'Password must contain at least one special character.')
             return redirect('indexuser:change_password')
 
         # Check if the password contains any whitespace characters
         if ' ' in new_password:
-            messages.error(request, 'Password cannot contain whitespace characters.')
+            messages.warning(request, 'Password cannot contain whitespace characters.')
             return redirect('indexuser:change_password')
 
         # Validate the new password
         try:
             validate_password(new_password, user=request.user)
         except ValidationError as e:
-            messages.error(request, e)
+            messages.warning(request, e)
             return redirect('indexuser:change_password')
 
         # Check if new password matches the confirmation
         if new_password != confirm_password:
-            messages.error(request, 'New password and confirmation do not match. Please try again.')
+            messages.warning(request, 'New password and confirmation do not match. Please try again.')
             return redirect('indexuser:change_password')
 
         # Set the new password and save
         request.user.set_password(new_password)
-        request.user.save()
-
+        valuser = request.user.save()
+        if valuser:
+            messages.success(request, 'the password changed sucessfully')
         # Update session auth hash
+
         update_session_auth_hash(request, request.user)
 
         # Logout the user for security reasons
@@ -235,15 +257,15 @@ def resend_otp(request):
         send_mail(
             'Resent OTP verification',
             f'Your new OTP for signup is: {otp}',
-            'timetrixcronico@gmail.com',
+            'shraavana09@gmail.com',
             [request.session['signup_details']['email']],
             fail_silently=True
         )
         messages.info(request, 'New OTP sent. Please check your email.')
-        return redirect('enter_otp')
+        return redirect('indexuser:enter_otp')
     else:
         messages.error(request, 'No signup session found.')
-        return redirect('signup')
+        return redirect('indexuser:signup')
 
 #========================user signin to the system====================================================================================================================================================
 @cache_control(max_age=0, no_cache=True, must_revalidate=True, no_store=True)
@@ -271,6 +293,106 @@ def signin(request):
         else:
             messages.error(request, 'Invalid username and password')   
     return render(request, 'userhome/userlogin.html')
+#===================================================forgot password=====================================================================
+
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        
+        # Validate email format
+        try:
+            validate_email(email)
+        except ValidationError:
+            messages.error(request, 'Please enter a valid email address.')
+            return render(request, 'userhome/forgot_password.html')
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            user = None
+        if user is not None:
+            # Generate a token for password reset
+            token = default_token_generator.make_token(user)
+
+            # Encode user id for the password reset link
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+            # Send password reset email to the user
+            reset_link = request.build_absolute_uri(
+                f'/reset-password/{uid}/{token}/'
+            )
+            subject = 'Password Reset'
+            message = render_to_string('userhome/reset_password_email.html', {
+                'user': user,
+                'reset_link': reset_link
+            })
+            send_mail(subject, message, 'yourseamlesslife@gmail.com', (user.email,))
+
+            messages.info(request, 'Password reset instructions have been sent to your email.')
+            return redirect('indexuser:user_login')
+        else:
+            messages.error(request, 'No user found with that email address.')
+
+    return render(request, 'userhome/forgot_password.html')
+#===================================reset password======================================================================================
+def reset_password(request, uidb64, token):
+    if request.method == 'POST':
+        # Decode user id from uidb64
+        try:
+            uid = force_text(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            # Validate new password
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+
+            try:
+                validate_password(new_password)
+            except ValidationError as e:
+                messages.error(request, ', '.join(e.messages))
+                return render(request, 'userhome/reset_password.html', {'uidb64': uidb64, 'token': token})
+
+            if new_password != confirm_password:
+                messages.error(request, 'New password and confirm password do not match.')
+                return render(request, 'userhome/reset_password.html', {'uidb64': uidb64, 'token': token})
+
+            # Set the new password and save
+            user.password = make_password(new_password)
+            user.save()
+
+            messages.success(request, 'Password reset successful. You can now login with your new password.')
+            return redirect('signin')
+        else:
+            messages.error(request, 'Invalid reset link. Please try again.')
+            return render(request, 'userhome/reset_password.html')
+
+    # GET request, render reset password form
+    return render(request, 'userhome/reset_password.html', {'uidb64': uidb64, 'token': token})
+
+
+
+def reset_password_email(request):
+    # Assuming the user is authenticated
+    user = request.user
+    
+    # Generate the token for the authenticated user
+    token = default_token_generator.make_token(user)
+    
+    # Encode user id for the reset link
+    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+    
+    # Generate the reset link using reverse and passing uidb64 and token as parameters
+    reset_link = request.build_absolute_uri(reverse('reset_password', kwargs={'uidb64': uidb64, 'token': token}))
+    
+    context = {
+        'user': user,
+        'reset_link': reset_link
+    }
+    
+    return render(request, 'userhome/reset_password_email.html', context)
 
 #============================user signout==================================================================================================================================================================================================
 @cache_control(max_age=0, no_cache=True, must_revalidate=True, no_store=True)
@@ -489,7 +611,7 @@ def add_to_cart(request):
 def cart_list(request):
     user = request.user
     items = CartItem.objects.filter(user=user, is_deleted=False)
-    coupons = Coupon.objects.filter(active=True)
+    coupons = Coupon.objects.all()
     ct = items.count()
 
     total_without_discount = items.aggregate(total_sum=Sum('total'))['total_sum'] or 0
@@ -500,23 +622,23 @@ def cart_list(request):
 
     if request.session.get('order_placed', False):
         del request.session['order_placed']
-        messages.success(request, 'Order placed successfully!')
-        return redirect('indexuser:user_index')  
+       
 
     if applied_coupon_id:
         try:
             applied_coupon = Coupon.objects.get(id=applied_coupon_id, active=True,
                                                 active_date__lte=timezone.now(), expiry_date__gte=timezone.now())
+            discounts = (total_without_discount * applied_coupon.discount) / 100
         except Coupon.DoesNotExist:
 
             request.session.pop('applied_coupon_id', None)
 
     if request.method == "POST":
         if 'apply_coupon' in request.POST:
-            coupon_code = request.POST['coupon_code']
-            print(f' the coupon code is 888 {coupon_code}')
+            coupon_code = request.POST.get('coupon_code')
             try:
-                coupon = Coupon.objects.get(code=coupon_code)
+                coupon = Coupon.objects.get(code=coupon_code, active=True, active_date__lte=timezone.now(),
+                                            expiry_date__gte=timezone.now())
 
                 discounts = (total_without_discount * coupon.discount) / 100
                 items.update(coupon=coupon)
@@ -572,6 +694,7 @@ def cart_list(request):
 
 
     return render(request, 'userhome/cart.html', context)
+
 
 def remove_coupon(request):
     try:
@@ -696,9 +819,10 @@ def delete_cart_item(request):
         return JsonResponse({'error': str(e)})
 
 #======================================= user account ====================================================================================================================================
-#======================================= user account ====================================================================================================================================
 @cache_control(max_age=0,no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url='user_login')
+
+
 
 def user_account(request):
     user_address = Address.objects.filter(users=request.user)
@@ -715,21 +839,38 @@ def user_account(request):
     
 
     Wallet.objects.get_or_create(user=request.user)
-    wallet = Wallet.objects.get(user = request.user)
+    wallet = Wallet.objects.get(user=request.user)
     
 
     wallethistory =  WalletHistory.objects.filter(wallet=wallet).order_by('-created_at')
     for i in user_address:
         print(f'fasdfjasjfasl {i}')
+
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your account details have been updated successfully.')
+            return redirect('indexuser:user_account')
+        else:
+            messages.error(request, 'Error updating account details. Please correct the errors below.')
+    else:
+        # Initialize the form with initial values from request.user
+        form = UserProfileForm(instance=request.user)
+    
     context={
-        'user_address':user_address,
-        'user_data' :request.user,
+        'user_address': user_address,
+        'user_data': request.user,
         'order_history': order_history,
-        'order_items':order_items,
-        'wallet':wallet,
-        'wallethistory':wallethistory,
+        'order_items': order_items,
+        'wallet': wallet,
+        'wallethistory': wallethistory,
+        'form': form,
     }
-    return render(request, 'userhome/user_account.html',context)
+    return render(request, 'userhome/user_account.html', context)
+
+
+
 #========================== edit,delete address ==========================================================================================================================================================================
 def add_address(request):
     if request.method=='POST':
@@ -864,77 +1005,28 @@ def return_order(request,order_number):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 #================================ useraccount edit and save  ===========================================================================================================================================
-def add_address(request):
-    if request.method=='POST':
-        form = AddressForm(request.POST,request.FILES)
-        if form.is_valid():
-            address=form.save(commit=False)
-            address.users = request.user
-            address.save()
-            return redirect('indexuser:user_account')
-    else:
-        form=AddressForm()
-    context={
-        'form':form
-    }
-    return render(request, 'userhome/add_address.html',context)
 
-@login_required(login_url='user_login')
 def edit_user(request):
     if request.method == 'POST':
-        form = AddressForm(request.POST, instance=request.user)
+        form = UserProfileForm(request.POST, instance=request.user)
         if form.is_valid():
-            # Cleaned data from form
-            first_name = form.cleaned_data['first_name']
-            last_name = form.cleaned_data['last_name']
-            email = form.cleaned_data['email']
-
-            # Validate first name, last name, and email
-            if not first_name.isalpha():
-                messages.error(request, 'First name must contain only letters.')
-                return redirect('indexuser:user_account')
-            if not last_name.isalpha():
-                messages.error(request, 'Last name must contain only letters.')
-                return redirect('indexuser:user_account')
-            if ' ' in email:
-                messages.error(request, 'Email address cannot contain whitespace.')
-                return redirect('indexuser:user_account')
-
-            # Update user's information
             form.save()
             messages.success(request, 'Your account details have been updated successfully.')
             return redirect('indexuser:user_account')
-
+        else:
+            messages.error(request, 'Error updating account details. Please correct the errors below.')
     else:
-        form = AddressForm(instance=request.user)
-
-    return render(request, 'userhome/user_account.html', {'form': form})
-# def edit_user(request):
-#     if request.method == 'POST':
-#         first_name = request.POST.get('firstname', '')
-#         last_name = request.POST.get('lastname', '')  # Assuming 'phone' is for last name in your form
-#         email = request.POST.get('email', '')
-        
-#         # Fetch the currently logged in user
-#         user = request.user
-        
-#         # Update user's information
-#         user.first_name = first_name
-#         user.last_name = last_name
-#         user.email = email
-#         print(first_name)
-#         print(last_name)
-        
-#         try:
-#             user.full_clean()  # Perform model validation
-#             user.save()  # Save user data
-#             messages.success(request, 'Your account details have been updated successfully.')
-#             return redirect('indexuser:user_account')
-#         except Exception as e:
-#             messages.error(request, f'Error updating account details: {str(e)}')
-#             return redirect('indexuser:user_account')  # Redirect to user_account page with error message
+        # Initialize the form with initial values from user_data
+        initial_data = {
+            'first_name': request.user.first_name,
+            'last_name': request.user.last_name,
+            'email': request.user.email,
+        }
+        form = UserProfileForm(instance=request.user, initial=initial_data)
     
-#     return redirect('indexuser:user_account')
+    return render(request, 'userhome/user_account.html', {'form': form})
+
+
 
 #===========================================================wishlist=========================================================================
 

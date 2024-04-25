@@ -7,7 +7,7 @@
           <h2 class="content-title card-title"> Category Offers</h2>
           
       </div>
-      <div class="alert alert-danger" id="myCategory">
+      {% comment %} <div class="alert alert-danger" id="myCategory">
         {% if messages %}
         {% for message in messages %}
         {{message}}
@@ -22,7 +22,7 @@
             alert.style.display = 'none';
           }
         }, 3000);  // 3000 milliseconds = 3 seconds
-      </script>
+      </script> {% endcomment %}
       <div>
           <a href="{% url 'create-category-offer'  %}" class="btn btn-primary btn-sm rounded">Create new</a>
       </div>

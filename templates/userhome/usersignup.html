@@ -52,13 +52,13 @@
                                                 <button type="submit" class="btn btn-fill-out btn-block hover-up" name="login" href="{% url 'indexuser:enter_otp' %}"                                                                                                           >Submit &amp; Register</button>
                                             </div> 
                                         </form>
-                                        {% if messages %}
+                                        {% comment %} {% if messages %}
                                             <div class="alert alert-danger">
                                                 {% for message in messages %}
                                                     <strong>{{ message }}</strong><br>
                                                 {% endfor %}
                                             </div>
-                                        {% endif %}
+                                        {% endif %} {% endcomment %}
                                         <div class="divider-text-center mt-15 mb-15">
                                             <span> or</span>
                                         </div>

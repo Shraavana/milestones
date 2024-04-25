@@ -296,7 +296,7 @@
                                                 {% if discount_offer is not None and discount_offer.active %}
                                                 <div class="product-price">
                                                     ₹<span class="current-product-price-{{related.id}}">{{related.productattribute_set.first.price}}</span>
-                                                    {% comment %} ₹<span class="old-price">{{related.productattribute_set.first.old_price}}</span> {% endcomment %}
+                                                    
                                                 </div>
                                             {% elif discounted_offer %}
                                                 {% for dis in discounted_offer %}

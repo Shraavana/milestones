@@ -20,16 +20,7 @@
                     <h4>product Details</h4>
                 </div>
 
-                <div id="createoffer">
-                  {% if messages %}
-                  {% for message in messages %}
-                  {{message}}
-                  {% endfor %}
-                  {% endif %}
-                </div>
-                <div class="alert alert-danger " id="alertoffer">
-                  {{form.errors}}
-                </div>
+                
                 <script>
                   // Add a script to hide the alert after 3 seconds
                   setTimeout(function() {
@@ -39,12 +30,6 @@
                     }
                   }, 3000);  // 3000 milliseconds = 3 seconds
 
-                  setTimeout(function() {
-                    var alert = document.getElementById('alertoffer');
-                    if (alert) {
-                      alert.style.display = 'none';
-                    }
-                  }, 3000);  // 3000 milliseconds = 3 seconds
                 </script>
 
 
@@ -66,7 +51,7 @@
                         
                         <div class="mb-4">
                           <label class="form-label">Status</label>
-                          <button type="button" id="toggleStatusButton" onclick="toggleStatus()">
+                          <button type="radio" class="" id="toggleStatusButton" onclick="toggleStatus()">
                               {% if not form.active %}Deactivate{% else %}Activate{% endif %}
                           </button>
                           <!-- <input type="hidden" name="active" id="id_active" value="{% if form.active %}True{% else %}False{% endif %}"> -->

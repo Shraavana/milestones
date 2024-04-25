@@ -1,14 +1,17 @@
 {% extends 'adminhome/base.html' %}
 {% load static %}
 {% block  content %}
-
 <section class="content-main">
+    <style>
+        .error-message {
+            color: red;
+        }
+    </style>
     <div class="row">
         <div class="col-9">
             <div class="content-header">
                 <h2 class="content-title">Add Coupon</h2>
                 <div>
-                    
                    
                 </div>
             </div>
@@ -19,13 +22,14 @@
                     <h4>Coupon Details</h4>
                 </div>
 
-                <div class="">
-                  {% if messages %}
-                  {% for message in messages %}
-                  {{message}}
-                  {% endfor %}
-                  {% endif %}
-                </div>
+                {% comment %} <div class="error-messages">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <p class="error-message">{{ message }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div> {% endcomment %}
+                
 
 
                 <!-- {{form.errors}} -->
@@ -74,13 +78,9 @@
                         </div>
                     </div>
                 </form>
-                
-                
-                
-                    
+            </div>
+        </div>
     </div>
-    
-       
 </section>  
 
-{% endblock %}      
+{% endblock %}

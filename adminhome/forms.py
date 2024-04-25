@@ -19,10 +19,10 @@ class ProductOfferForm(forms.ModelForm):
         model = ProductOffer
         fields = ['discount_percentage', 'start_date', 'end_date', 'active']
         widgets = {
-            'start_date': DateInput(attrs={'type': 'date'}),
-            'end_date': DateInput(attrs={'type': 'date'}),
+             'discount_percentage': forms.NumberInput(attrs={'class': 'form-control'}),
+            'start_date': DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'end_date': DateInput(attrs={'type': 'date', 'class': 'form-control'}),
         }
-
     def clean_discount_percentage(self):
         discount_percentage = self.cleaned_data['discount_percentage']
         if not (0 <= discount_percentage <= 100):

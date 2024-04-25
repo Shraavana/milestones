@@ -40,13 +40,13 @@
                         </div> 
                     </form>
                 
-                    {% if messages %}
+                    {% comment %} {% if messages %}
                         <script>
                             {% for message in messages %}
                                 alert("{{ message }}");
                             {% endfor %}
                         </script>
-                    {% endif %}
+                    {% endif %} {% endcomment %}
                 </div>
             </div>
         </section>

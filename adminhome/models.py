@@ -19,7 +19,7 @@ class Coupon(models.Model):
 
 
 class ProductOffer(models.Model):
-    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    discount_percentage = models.IntegerField()
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     active = models.BooleanField(default=False)
@@ -29,7 +29,7 @@ class ProductOffer(models.Model):
 
     def save(self, *args, **kwargs):
         if not isinstance(self.discount_percentage, Decimal):
-            self.discount_percentage = Decimal(str(self.discount_percentage))
+            self.discount_percentage = int(str(self.discount_percentage))
         super().save(*args, **kwargs)
     
 class CategoryOffer(models.Model):

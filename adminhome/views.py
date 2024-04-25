@@ -13,11 +13,12 @@ from adminhome.models import *
 from payment.models import *
 from datetime import datetime, timedelta
 from django.db.models.functions import TruncDate,TruncMonth, TruncYear
-from django.db.models import Count
+from django.db.models import Count,Sum
 from django.utils.timezone import make_aware
 from mileapp.models import category
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
-
+from django.utils import timezone
+from decimal import Decimal
 
 
 
@@ -57,6 +58,7 @@ def admin_index(request):
     orders_count=orders.count()
     total_users_count = User.objects.count()
     total = 0
+    inte_revenue=0
     for order in orders:
         if order.status == 'Delivered':
             total += order.order_total
@@ -64,11 +66,12 @@ def admin_index(request):
         if (order.payment and order.payment.payment_method == 'Razorpay' and order.status != 'Cancelled' ) or (order.payment and order.payment.payment_method == 'Wallet' and order.status != 'Cancelled'):
             total += order.order_total
     revenue=int(total)
+    inte_revenue = orders.aggregate(total_revenue=Sum('order_total'))['total_revenue'] or 0
     end_date = timezone.now()
     start_date = end_date - timedelta(days=7)
     print('Start Date:', start_date)
     print('End Date:', end_date)
-
+    revenue = orders.aggregate(total_revenue=Sum('order_total'))['total_revenue'] or 0
     daily_order_counts = (
             CartOrder.objects
             .filter(created_at__range=(start_date, end_date))
@@ -76,10 +79,16 @@ def admin_index(request):
             .annotate(order_count=Count('id'))
             .order_by('created_at')
         )
-
+    print(f'daily orrderr {daily_order_counts}')
+    print('SQL Query:', daily_order_counts.query)
     dates = [entry['created_at'].strftime('%Y-%m-%d') for entry in daily_order_counts]
     counts = [entry['order_count'] for entry in daily_order_counts]
-    
+    print('Daily Chart Data:')
+    print('Dates:', [entry['created_at'] for entry in daily_order_counts])
+    print('Counts:', [entry['order_count'] for entry in daily_order_counts])
+    print(dates)
+    print(counts)
+
 
     end_date = timezone.now()
     start_date = end_date - timedelta(days=365) 
@@ -123,9 +132,9 @@ def admin_index(request):
         'total_users_count': total_users_count,
         'statuses': statuses,
         'order_counts': order_counts,
+        'inte_revenue':inte_revenue,
     }
     return render(request, 'adminhome/adminindex.html', context)
-
 
 #================================================admin add new,edit category====================================================================================================================
 
@@ -347,6 +356,7 @@ def admin_varient_edit(request, id):
         product_form = ProductAttributeForm(request.POST, request.FILES, instance=product)
         if product_form.is_valid():
             product_form.save()
+            messages.success(request, 'Updated sucessfully')
             return redirect('admin_varient')
 
     else:
@@ -403,23 +413,39 @@ def admin_coupon(request):
     return render(request, 'adminhome/admin_coupon.html',{'coupon':coupon})
 
 #=================================================create coupon==================================================================
+
 @login_required(login_url='admin_login')
 def create_coupon(request):
     if not request.user.is_superadmin:
         return redirect('admin_login')
+    
     if request.method == 'POST':
         code = request.POST['code']
-        discount = request.POST['discount']
+        discount = float(request.POST['discount'])
         active = request.POST.get('active') == 'on'
-        active_date = request.POST['active_date']
+        active_date = timezone.now().date()  # Get the current date
         expiry_date = request.POST['expiry_date']
 
-        if active_date > expiry_date:
-            messages.error(request, 'Active date should not be greater than expiry date')
+        # Validate active date
+        if active_date > timezone.datetime.strptime(expiry_date, '%Y-%m-%d').date():
+            messages.warning(request, 'Active date should not be greater than expiry date')
             return render(request, 'adminhome/create_coupon.html')
 
+        # Validate coupon code
+        if len(code.strip()) < 3:
+            messages.warning(request, 'Coupon code must be at least 3 characters long')
+            return render(request, 'adminhome/create_coupon.html')
+
+        # Validate discount percentage
+        # Validate discount percentage
+        if discount <= 2 or discount >= 90:
+            messages.warning(request, 'Discount must be greater than 2% and less than 90%')
+            return render(request, 'adminhome/create_coupon.html')
+
+
+        # Check if coupon code already exists
         if Coupon.objects.filter(code=code).exists():
-            messages.error(request, f'Coupon with code {code} already exists')
+            messages.warning(request, f'Coupon with code {code} already exists')
             return render(request, 'adminhome/create_coupon.html')
 
         coupon = Coupon(
@@ -437,32 +463,49 @@ def create_coupon(request):
 
 
 @login_required(login_url='admin_login')
-def edit_coupon(request,id):
+def edit_coupon(request, id):
     if not request.user.is_superadmin:
         return redirect('admin_login')
     
     coupon_code = get_object_or_404(Coupon, id=id)
-    print(f'Active Date: {coupon_code.active_date}')
+    
     if request.method == 'POST':
         code = request.POST['code']
-        discount = request.POST['discount']
+        discount = float(request.POST['discount'])
         active = request.POST.get('active') == 'on'
         active_date = request.POST['active_date']
         expiry_date = request.POST['expiry_date']
         
+        # Validate active date
         if active_date > expiry_date:
-            messages.error(request, 'Active date should not be greater than expiry date')
-            return render(request, 'admintemp/create-coupon.html')
+            messages.warning(request, 'Active date should not be greater than expiry date')
+            return render(request, 'adminhome/update_coupon.html', {'coupon_code': coupon_code})
         
-        coupon_code.code=code
-        coupon_code.discount=discount
-        coupon_code.active_date=active_date
-        coupon_code.expiry_date=expiry_date
-        coupon_code.active=active
+        # Validate coupon code length
+        if len(code.strip()) < 3:
+            messages.warning(request, 'Coupon code must be at least 3 characters long')
+            return render(request, 'adminhome/update_coupon.html', {'coupon_code': coupon_code})
+
+        # Validate discount percentage
+        if discount <= 2 or discount >= 90:
+            messages.warning(request, 'Discount must be greater than 2% and less than 90%')
+            return render(request, 'adminhome/update_coupon.html', {'coupon_code': coupon_code})
+
+        # Check if coupon code already exists (excluding the current coupon being edited)
+        if Coupon.objects.exclude(id=id).filter(code=code).exists():
+            messages.warning(request, f'Coupon with code {code} already exists')
+            return render(request, 'adminhome/update_coupon.html', {'coupon_code': coupon_code})
+
+        coupon_code.code = code
+        coupon_code.discount = discount
+        coupon_code.active_date = active_date
+        coupon_code.expiry_date = expiry_date
+        coupon_code.active = active
         coupon_code.save()
-        messages.success(request, 'Coupon Updated successfully')
+        messages.success(request, 'Coupon updated successfully')
         return redirect('admin_coupon')
-    return render (request, 'adminhome/update_coupon.html',{'coupon_code':coupon_code})
+    
+    return render(request, 'adminhome/update_coupon.html', {'coupon_code': coupon_code})
 
 
 @login_required(login_url='admin_login')        
@@ -563,12 +606,36 @@ def cancell_order(request, order_number):
         order.status = 'Cancelled'
         order.save()
 
-        # Updated allowed payment methods to only include Cash on Delivery (COD)
-        allowed_payment_methods = ['COD']
+        allowed_payment_methods = ['Razorpay', 'Wallet']
 
         if order.payment.payment_method in allowed_payment_methods:
             with transaction.atomic():
-                # No need to handle user wallet for COD
+                user_wallet = order.user.wallet if hasattr(order.user, 'wallet') else None
+
+                if order.payment.payment_method == 'Razorpay':
+                    if user_wallet:
+                        user_wallet.balance += order.order_total
+                        user_wallet.save()
+
+                        WalletHistory.objects.create(
+                            wallet=user_wallet,
+                            type='Credited',
+                            amount=order.order_total,
+                            created_at=timezone.now(),
+                            reason='Admin Cancellation'
+                        )
+                elif order.payment.payment_method == 'Wallet':
+                    if user_wallet:
+                        user_wallet.balance += order.order_total
+                        user_wallet.save()
+
+                        WalletHistory.objects.create(
+                            wallet=user_wallet,
+                            type='Credited',
+                            amount=order.order_total,
+                            created_at=timezone.now(),
+                            reason='Admin Cancellation'
+                        )
 
                 for order_item in order.productorder_set.all():
                     product_attribute = order_item.variations
@@ -612,12 +679,18 @@ def admin_category_edit(request,id):
 #=============================================sales_Report==============================================================
 
 @login_required(login_url='admin_login')
+
+
+
 def sales_report(request):
     if not request.user.is_superadmin:
         return redirect('admin_login')
     
     start_date_value = ""
     end_date_value = ""
+    total_revenue = 0
+    total_orders_count = 0
+    product_count=Product.objects.count()
     
     try:
         orders = CartOrder.objects.filter(is_ordered=True).order_by('-created_at')
@@ -633,7 +706,28 @@ def sales_report(request):
         if start_date and end_date:
             start_date = datetime.strptime(start_date, '%Y-%m-%d')
             end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            
+            # Make start_date and end_date timezone aware
+            start_date = timezone.make_aware(start_date)
+            end_date = timezone.make_aware(end_date)
+            
+            # Check if start_date is a future date
+            if start_date > timezone.now():
+                messages.error(request, "Invalid start date. Please choose a past or present date.")
+                return redirect('sales_report')
+            
+            # Check if end_date is the current date or earlier
+            if end_date > timezone.now():
+                messages.error(request, "Invalid end date. Please choose the current date or an earlier date.")
+                return redirect('sales_report')
+            
             orders = orders.filter(created_at__range=(start_date, end_date))
+    
+    # Calculate total revenue
+    total_revenue = orders.aggregate(total_revenue=Sum('order_total'))['total_revenue'] or 0
+    
+    # Calculate total number of orders
+    total_orders_count = orders.count()
     
     # Pagination
     paginator = Paginator(orders, 10)  # Show 10 orders per page
@@ -648,7 +742,10 @@ def sales_report(request):
     context = {
         'orders': orders,
         'start_date_value': start_date_value,
-        'end_date_value': end_date_value
+        'end_date_value': end_date_value,
+        'total_revenue': total_revenue,
+        'total_orders_count': total_orders_count,
+        'product_count':product_count,
     }
 
     return render(request, 'adminhome/sales_report.html', context)
@@ -666,8 +763,8 @@ def product_offers(request):
     products = ProductAttribute.objects.all()
     for p in products:
         if product_offer:
-            discounted_price = p.price - (p.price * product_offer.discount_percentage / 100)
-            p.price = max(discounted_price, Decimal('0.00'))  
+            discounted_price = p.price - int(p.price * product_offer.discount_percentage / 100)
+            p.price = int(max(discounted_price, int('0'))  )
         else:          
             p.price = p.price
         p.save()
@@ -703,14 +800,14 @@ def edit_product_offers(request, id):
             active_category_offer = CategoryOffer.objects.filter(active=True).first()
 
             if active_category_offer:
-               
+        
                 messages.error(request, 'Cannot create/update product offer when a category offer is active.')
                 return redirect('product-offers')
 
             if active:
                 ProductOffer.objects.exclude(id=offer_discount.id).update(active=False)
 
-            offer_discount.discount_percentage = discount or None
+            offer_discount.discount_percentage =  int(discount)
             offer_discount.start_date = start_date or None
             offer_discount.end_date = end_date or None
             offer_discount.active = active
@@ -758,7 +855,11 @@ def delete_product_offer(request,id):
     if not request.user.is_superadmin:
         return redirect('admin_login')
     try:
-        offer= get_object_or_404(ProductOffer, id=id)
+        offer= ProductOffer.objects.get(id=id)
+        product = ProductAttribute.objects.filter()
+        for i in product:
+            i.price = i.old_price
+            i.save()
     except ValueError:
         return redirect('product-offers')
     offer.delete()

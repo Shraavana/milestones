@@ -82,9 +82,7 @@
                             <a class="nav-link" href="{% url 'indexuser:popularity' %}">Popular</a>
                         </li>
                         
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="nav-tab-three" data-bs-toggle="tab" data-bs-target="#tab-three" type="button" role="tab" aria-controls="tab-three" aria-selected="false">New added</button>
-                        </li>
+                        
                     </ul>
                     <a href="#" class="view-more d-none d-md-flex">View More<i class="fi-rs-angle-double-small-right"></i></a>
                 </div> 
@@ -113,10 +111,8 @@
                                             <a href="shop-grid-right.html">{{ product.category }}</a>
                                         </div>
                                         <h2><a href="{% url 'indexuser:products_by_category' category_id=product.category.id %}">{{ product.product_name }}</a></h2>
-                                        <div class="rating-result" title="90%">
-                                            <span>
-                                                <span>90%</span>
-                                            </span>
+                                        <div class="rating-result" title="50%">
+                                            
                                         </div>
                                         <div class="product-price">
                                             <span class="product-price1">{{ product.productattribute_set.first.price}}</span>

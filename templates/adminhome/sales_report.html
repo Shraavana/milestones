@@ -28,6 +28,15 @@
                     <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date_value }}" required>
 
                     <button type="submit" class="btn btn-dark h-auto">Filter</button>
+                    
+                      <h6 class="mb-1 card-title">Revenue::</h6>
+                      <span>{{total_revenue}}</span>
+                      <h6 class="mb-1 card-title">Orders::</h6> <span>{{total_orders_count}}</span>
+                      
+                        <h6 class="mb-1 card-title">Products</h6> <span>{{product_count}}</span>
+                        
+                  
+                 
                 </div>
             </form>
         </div>
@@ -35,6 +44,13 @@
           
 
         </div>
+        {% comment %} {% if messages %}
+        <div class="alert alert-danger">
+            {% for message in messages %}
+                <strong>{{ message }}</strong><br>
+            {% endfor %}
+        </div>
+    {% endif %} {% endcomment %}
 
 <table class="table table-striped table-hover" id ='container_content'>
     <thead >
@@ -43,7 +59,7 @@
           <th scope="col">Date</th>
           <th scope="col">Order Number</th>
           <th scope="col">Customer</th>
-          <th scope="col">Coupon</th>
+          {% comment %} <th scope="col">Coupon</th> {% endcomment %}
           <th scope="col">Order Total</th>
           <th scope="col">Payment</th>
           
@@ -58,11 +74,11 @@
                 <td>{{order.created_at}}</td>
                 <td>{{order.order_number}}</td>
                 <td>{{order.user.username}}</td>
-                {%if order.coupen %}
+                {% comment %} {%if order.coupen %}
                 <td>{{order.coupen}}</td>
                 {% else %}
                 <td></td>
-                {% endif %}
+                {% endif %} {% endcomment %}
                 <td>{{order.order_total}}</td>
                 <td>{{order.payment.payment_method}}</td>
                 

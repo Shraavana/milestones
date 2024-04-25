@@ -130,15 +130,15 @@
                                     {% endfor %}
                                     <tr>
                                         <td class="cart_total_label">Cart</td>
-                                        <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{cart_subtotal}}</td>
+                                        <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> ₹{{totals}}</td>
                                       </tr>
 
                                     <tr>
                                         <td class="cart_total_label">Coupon Discount</td>
-                                        <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i> {{coupon.discount}}  %   OFF</td>
+                                        <td colspan="2" class="cart_total_amount" id='discounts'> <i class="ti-gift mr-5"></i>₹{{discounts}}</td>
                                       </tr>
                                                              <th>Total</th>
-                                        <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹{{total }}</span></td>
+                                        <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹{{ total }}</span></td>
                                     </tr>
                                     
                                 </tbody>

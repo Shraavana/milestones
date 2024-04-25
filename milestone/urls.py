@@ -25,7 +25,7 @@ urlpatterns = [
     path('adminhome/',include('adminhome.urls')),
     path('indexuser/',include('mileapp.urls')),
     path('checkout/',include('payment.urls')),
-
+    path('accounts/', include('django.contrib.auth.urls')),
     
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 # myproject/urls.py

@@ -3,6 +3,8 @@ from django.urls import path
 from .import views
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
+
 
 app_name='indexuser'
 
@@ -30,6 +32,7 @@ urlpatterns = [
     path('user_account/', views.user_account, name='user_account'),
     path('edit_user/',views.edit_user,name='edit_user'),
     path('change_password/',views.change_password,name='change_password'),
+
     path('order_items/<int:order_number>/', views.order_items, name='order_items'),
     path('add_address/', views.add_address, name='add_address'),
     path('edit-address/<int:address_id>/', views.edit_address, name='edit_address'),

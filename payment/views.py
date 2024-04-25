@@ -212,61 +212,123 @@ from .forms import AddressForm
 @never_cache
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @login_required(login_url='user_login')
+# def checkout(request):
+#     user = request.user 
+#     items = CartItem.objects.filter(user=user, is_deleted=False)
+#     user_addresses = Address.objects.filter(users=request.user)
+    
+#     address_form = AddressForm(request.POST or None)
+#     cart = CartItem.objects.filter(user=request.user).first()
+#     cartval = CartItem.objects.filter(user=request.user)
+#     total = 0
+#     for i in cartval:
+#         total += i.get_subtotal()
+
+#     # Fetch the wallet information
+#     wallet, _ = Wallet.objects.get_or_create(user=user, defaults={'balance': 0})
+    
+#     if request.session.get('order_placed', False):
+#         del request.session['order_placed']
+#         return redirect('indexuser:user_index')  
+
+#     if request.method == 'POST':
+#         if 'use_existing_address' in request.POST:
+#             selected_address_id = request.POST.get('existing_address')
+#             selected_address = get_object_or_404(Address, id=selected_address_id)
+#             return render(request, 'payment/payment.html', {
+#                 'selected_address': selected_address,
+#                 'items': items,
+#                 'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
+#                 'wallet': wallet,  # Pass the wallet information to the payment page
+#             })
+        
+#         elif address_form.is_valid():
+#             address_instance = address_form.save(commit=False)
+#             address_instance.users = request.user
+#             address_instance.save()
+#             CartItem.objects.filter(user=user, is_deleted=False).update(address=address_instance)
+#             return render(request, 'payment/payment.html', {
+#                 'new_address': address_instance,
+#                 'items': items,
+#                 'coupon': cart.coupon,
+#                 'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
+#                 'cart_subtotal': total,
+#                 'wallet': wallet,  # Pass the wallet information to the payment page
+#             })
+
+#     # Apply discount if cart has a coupon
+#     if cart and cart.coupon:
+#         total -= (cart.coupon.discount * 100)//2
+    
+#     return render(request, 'payment/checkout.html', {
+#         'user_addresses': user_addresses,
+#         'items': items,
+#         'coupon': cart.coupon if cart else None,
+#         'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
+#         'cart_subtotal': total,
+#         'wallet': wallet,  # Pass the wallet information to the checkout page
+#     })
 def checkout(request):
     user = request.user 
     items = CartItem.objects.filter(user=user, is_deleted=False)
     user_addresses = Address.objects.filter(users=request.user)
     
     address_form = AddressForm(request.POST or None)
-    cart = CartItem.objects.filter(user=request.user).first()
-    cartval = CartItem.objects.filter(user=request.user)
-    total = 0
-    for i in cartval:
-        total += i.get_subtotal()
+    totals = request.session.get('totals', 0)
+    total = request.session.get('total', 0)
+    discounts = request.session.get('discounts', 0)
 
-    # Fetch the wallet information
+    wallet = Wallet.objects.filter(user=user).first()
+    wallet_balance = wallet.balance if wallet else 0
+
+    wallet_button_disabled = total > wallet_balance
     wallet, _ = Wallet.objects.get_or_create(user=user, defaults={'balance': 0})
-    
+
     if request.session.get('order_placed', False):
         del request.session['order_placed']
-        return redirect('indexuser:user_index')  
+        return redirect('user_index')  
 
     if request.method == 'POST':
         if 'use_existing_address' in request.POST:
             selected_address_id = request.POST.get('existing_address')
             selected_address = get_object_or_404(Address, id=selected_address_id)
+            # Update the address for all CartItems in the user's cart
+            CartItem.objects.filter(user=user, is_deleted=False).update(address=selected_address.address)
+
             return render(request, 'payment/payment.html', {
                 'selected_address': selected_address,
                 'items': items,
-                'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
-                'wallet': wallet,  # Pass the wallet information to the payment page
-            })
+                'total': total,
+                'totals': totals,
+                'discounts': discounts,
+                'wallet_balance': wallet_balance,
+                'wallet_button_disabled': wallet_button_disabled,
+                'wallet':wallet,
+                                        })
         
         elif address_form.is_valid():
             address_instance = address_form.save(commit=False)
             address_instance.users = request.user
             address_instance.save()
-            CartItem.objects.filter(user=user, is_deleted=False).update(address=address_instance)
+            CartItem.objects.filter(user=user, is_deleted=False).update(address=address_instance.address)
             return render(request, 'payment/payment.html', {
                 'new_address': address_instance,
                 'items': items,
-                'coupon': cart.coupon,
-                'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
-                'cart_subtotal': total,
-                'wallet': wallet,  # Pass the wallet information to the payment page
+                'total': total,
+                'totals': totals,
+                'discounts': discounts,
+                'wallet_balance': wallet_balance,
+                'wallet_button_disabled': wallet_button_disabled,
+                'wallet': wallet,
             })
-
-    # Apply discount if cart has a coupon
-    if cart and cart.coupon:
-        total -= (cart.coupon.discount * 100)//2
     
     return render(request, 'payment/checkout.html', {
         'user_addresses': user_addresses,
         'items': items,
-        'coupon': cart.coupon if cart else None,
-        'total': total - (cart.coupon.discount * 100)//2 if cart and cart.coupon else total,
-        'cart_subtotal': total,
-        'wallet': wallet,  # Pass the wallet information to the checkout page
+        'total': total,
+        'totals': totals,
+        'discounts': discounts,
+        'wallet': wallet, 
     })
 
 #=========================================================payment with razorpay============================================================================
@@ -449,6 +511,7 @@ def order_success(request):
     address = order.selected_address
     
     request.session['order_placed'] = True
+    messages.success(request, 'Order Placed sucessfully')
     context = {
         'order':order,
         'order_number': order.order_number,

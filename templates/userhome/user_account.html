@@ -188,42 +188,46 @@
                                         {% endfor %}
                                     </div>
                                 </div>
-                                <div class="tab-pane fade" id="account-detail" role="tabpanel" aria-labelledby="account-detail-tab">
-                                    <div class="card">
-                                        <div class="card-header">
-                                            <h5>Account Details</h5>
-                                        </div>
-                                        <div class="card-body">
-                                            
-                                            <form method="post" action="{% url 'indexuser:edit_user'%}" name="enq">
-                                                 {% csrf_token %}
-                                                <div class="row">
-                                                    <div class="form-group col-md-6">
-                                                        <label>First Name <span class="required">*</span></label>
-                                                        <input required="" class="form-control square" name="name" value="{{user_data.first_name}}" type="text">
-                                                    </div>
-                                                    <div class="form-group col-md-6">
-                                                        <label>Last Name <span class="required">*</span></label>
-                                                        <input required="" class="form-control square"value="{{user_data.last_name}}" type="text">
-                                                    </div>
-                                                    
-                                                    <div class="form-group col-md-12">
-                                                        <label>Email Address <span class="required">*</span></label>
-                                                        <input required="" class="form-control square" name="email" value="{{user_data.email}}" type="email">
-                                                    </div>
-                                                    
-                                                </div>
-                                                <div class="col-md-12">
-                                                    {% comment %} <a href="" class="btn btn-sm">Edit </a> {% endcomment %}
-                                                    <button type="submit">SAVE</button>
-                                                </div>
-                                            </form>
-                                            <a href="{% url 'indexuser:change_password' %}">Do you want to change the password ?</a>
-                                            
+                                
+
+<div class="tab-pane fade" id="account-detail" role="tabpanel" aria-labelledby="account-detail-tab">
+    <div class="card">
+        <div class="card-header">
+            <h5>Account Details</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'indexuser:user_account' %}" name="enq">
+                {% csrf_token %}
+                <div class="row">
+                    {% comment %} <div class="form-group col-md-6">
+                        <label>First Name <span class="required">*</span></label>
+                        <input required="" class="form-control square" name="name" value="{{ user_data.first_name }}" type="text">
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label>Last Name <span class="required">*</span></label>
+                        <input required="" class="form-control square" value="{{ user_data.last_name }}" name="text">
+                    </div>
+                    <div class="form-group col-md-12">
+                        <label>Email Address <span class="required">*</span></label>
+                        <input required="" class="form-control square" name="email" value="{{ user_data.email }}" type="email">
+                    </div>
+                     <div class="col-md-12"> {% endcomment %}
+                        {{form.as_p}}
+                        <button type="submit">SAVE</button>
+                    </div>
+                </div> 
+            </form>
+        </div>
+        
+            <a href="{% url 'indexuser:change_password' %}">Do you want to change the password ?</a>
+            
 
 
-                                        </div>
-                                    </div>
+        </div>
+    </div>
+</div>
+
+</div>
                                 </div>
                                 
                             </div>

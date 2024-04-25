@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 {% load static %}
 <html class="no-js" lang="en">
 {% csrf_token %}
@@ -22,6 +23,22 @@
 
 <body>
     {% include "userhome/includes/navbar.html" %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+
+    <!-- Include SweetAlert JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    
+        {% if messages %}
+            {% for message in messages %}
+                Swal.fire({
+                    icon: '{{ message.tags }}',
+                    title: '{{ message.tags|title }}',
+                    text: '{{ message }}',
+                });
+            {% endfor %}
+        {% endif %}
+      </script>
 
     {% block content %}
 
