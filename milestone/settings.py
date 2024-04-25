@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,9 +25,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-em4d!kwdx7ceim1o9c$tpm1md8zqp+eqzx#_#_$v%xg(7-9v_!'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -87,11 +88,11 @@ WSGI_APPLICATION = 'milestone.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'milestone(db)',
-        'USER' : 'postgres',
-        'PASSWORD' : 'sree',
+        'NAME': config('NAME'),
+        'USER' : config('USER'),
+        'PASSWORD' : config('PASSWORD'),
         'HOST' : 'localhost',
-        'PORT' : '5433',
+        'PORT' : '',
     }
 }
 AUTH_USER_MODEL='mileapp.User'
@@ -146,13 +147,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST='smtp.gmail.com'
 EMAIL_PORT='587'
-EMAIL_HOST_USER='yourmilestonelife@gmail.com'
-EMAIL_HOST_PASSWORD='drzagxdbusrgslfr'
+# 
+EMAIL_HOST_USER=config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD= config('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS=True 
 
 
 
 
-
-RAZORPAY_API_KEY = 'rzp_test_EmNLSX1VjF9tFL'
-RAZORPAY_API_SECRET = 'm2lYpm9gRLZrsdkXOJiPauqY'
+# 
+RAZORPAY_API_KEY = config('RAZORPAY_API_KEY')
+RAZORPAY_API_SECRET =config('RAZORPAY_API_SECRET')
