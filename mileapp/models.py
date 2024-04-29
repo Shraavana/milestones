@@ -35,7 +35,7 @@ class UserManager(BaseUserManager):
             password = password,
             first_name = first_name,
             last_name = last_name,
-            phone = phone,
+            phone = phone
         )
         user.is_admin = True
         user.is_active = True
@@ -62,7 +62,7 @@ class User(AbstractBaseUser,PermissionsMixin):
     is_superadmin = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username','first_name','last_name']
+    REQUIRED_FIELDS = ['username','first_name','last_name', 'phone']
     objects=UserManager()
 
     groups=models.ManyToManyField(Group,blank=True,related_name='home_user_groups')
