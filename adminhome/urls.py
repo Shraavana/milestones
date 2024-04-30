@@ -16,6 +16,7 @@ urlpatterns = [
     path('admin_brand/',views.admin_brand,name='admin_brand'), 
     path('admin_brand_insert/',views.admin_brand_insert,name='admin_brand_insert'),
     path('admin_brand_edit/<int:id>',views.admin_brand_edit,name='admin_brand_edit'),
+    path('brand_available/<int:brand_id>/',views.brand_available,name='brand_available'),
     path('admin_color/',views.admin_color,name='admin_color'), 
     path('admin_color_insert/',views.admin_color_insert,name='admin_color_insert'),
     path('admin_color_edit/<int:id>',views.admin_color_edit,name='admin_color_edit'),

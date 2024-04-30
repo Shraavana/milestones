@@ -65,14 +65,14 @@ class User(AbstractBaseUser,PermissionsMixin):
     REQUIRED_FIELDS = ['username','first_name','last_name', 'phone']
     objects=UserManager()
 
-    groups=models.ManyToManyField(Group,blank=True,related_name='home_user_groups')
-    user_permissions=models.ManyToManyField(Permission,blank=True,related_name='home_user_permissions')
     def __str__(self):
         return self.email
     def has_perm(self, perm, obj=None):
         return self.is_admin
     def has_module_perms(self,app_lebel):
         return True
+    
+
     
 class category(models.Model):
     category_name=models.CharField(max_length=100,unique=True)

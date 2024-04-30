@@ -19,6 +19,8 @@ from mileapp.models import category
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.utils import timezone
 from decimal import Decimal
+from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseBadRequest
 
 
 
@@ -195,6 +197,26 @@ def admin_brand_edit(request,id):
         "obj":obj
     }
     return render(request,'adminhome/brand_edit.html', context)
+
+
+
+@login_required(login_url='admin_login')
+def brand_available(request, brand_id):
+    if not request.user.is_authenticated:
+        return HttpResponse("Unauthorized", status=401)
+    if not request.user.is_superadmin:
+        return redirect('admin_login')
+    
+    brand = get_object_or_404(Brand, id=brand_id)
+    
+    if brand.is_active:
+        brand.is_active=False
+       
+    else:
+        brand.is_active=True
+    brand.save()
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
 
 #=================================================== color list, add, edit ==========================================================================================================
 

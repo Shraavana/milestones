@@ -8,7 +8,7 @@ from payment.forms import AddressForm
 from django.db.models import F 
 from django.db.models import OuterRef, Subquery
 from .context_processors import *
-from django.contrib.auth import logout,login
+from django.contrib.auth import authenticate, logout,login
 from django.core.mail import send_mail
 from django.contrib.auth import login
 from django.contrib.auth.hashers import make_password
@@ -273,25 +273,30 @@ def resend_otp(request):
 def signin(request):
     if request.user.is_authenticated:
         return redirect('user_index')
+    
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
-        print(email)
+
+        # Try to get the user by email
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             user = None
-
-        print(user)
-        if user is not None and user.check_password(password):
-            if user.is_active:
-                login(request,user)
-                return redirect('indexuser:user_index')
-
+        # Authenticate the user
+        if user is not None:
+            authenticated_user = authenticate(request, email=email, password=password)
+            if authenticated_user is not None:
+                if authenticated_user.is_active:
+                    login(request, authenticated_user)
+                    return redirect('indexuser:user_index')
+                else:
+                    messages.error(request, 'Your account is Blocked by the admin')
             else:
-                messages.error(request, 'Your account is not active')
+                messages.error(request, 'Invalid password')
         else:
-            messages.error(request, 'Invalid username and password')   
+            messages.error(request, 'User does not exist')
+    
     return render(request, 'userhome/userlogin.html')
 #===================================================forgot password=====================================================================
 
@@ -374,25 +379,7 @@ def reset_password(request, uidb64, token):
 
 
 
-def reset_password_email(request):
-    # Assuming the user is authenticated
-    user = request.user
-    
-    # Generate the token for the authenticated user
-    token = default_token_generator.make_token(user)
-    
-    # Encode user id for the reset link
-    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-    
-    # Generate the reset link using reverse and passing uidb64 and token as parameters
-    reset_link = request.build_absolute_uri(reverse('reset_password', kwargs={'uidb64': uidb64, 'token': token}))
-    
-    context = {
-        'user': user,
-        'reset_link': reset_link
-    }
-    
-    return render(request, 'userhome/reset_password_email.html', context)
+
 
 #============================user signout==================================================================================================================================================================================================
 @cache_control(max_age=0, no_cache=True, must_revalidate=True, no_store=True)

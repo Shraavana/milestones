@@ -1,0 +1,101 @@
+{% extends "adminhome/base.html" %}
+{% load static %}
+{% block content %}
+<section class="content-main">
+    <div class="content-header">
+        <div>
+            <h2 class="content-title card-title">Brand</h2>
+           
+        </div>
+       
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <form method='post' action='{% url "admin_brand_insert" %}'>
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="product_name" class="form-label">Name</label>
+                            <input type="text" placeholder="Type here" required="required" name='name' class="form-control" id="product_name" />
+                        </div>
+                        {% if messages %}
+                        <ul class="messages">
+                          {% for message in messages %}
+                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                          {% endfor %}
+                        </ul>
+                      {% endif %}
+                        
+                        <div class="d-grid">
+                            <button class="btn btn-primary">Add brand</button>
+                        </div>
+                    </form>
+
+                    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+                    <script>
+                        $(document).ready(function () {
+                            $('#product_name').on('input', function () {
+                                var name = $(this).val();
+                                var slug = name.toLowerCase().replace(/\s+/g, '-').replace(/'/g, '');
+                                $('#product_slug').val(slug);
+                            });
+                        });
+                    </script>
+                </div>
+
+                <div class="col-md-9">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="" />
+                                        </div>
+                                    </th>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for obj in data %}
+                                    <tr>
+                                        <td class="text-center">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="" />
+                                            </div>
+                                        </td>
+                                        <td>{{ obj.id }}</td>
+                                        <td><b>{{ obj.brand_name }}</b></td>
+                                        <td class="text-end">
+                                            <a href="{% url 'admin_brand_edit' obj.id%}" class="btn btn-sm btn-warning rounded font-sm mt-15">Edit</a>
+                                        </td>
+                                     
+                                        <td>
+                                            <button  class="{% if not obj.is_active %}btn btn-outline-danger{% else %}btn btn-outline-success{% endif %}">
+                                                {% if not obj.is_active %}Not Available {% else %}Available{% endif %}
+                                            </button>
+                                        </td>
+                                        <td class="text-end" >
+                                            <div class="dropdown">
+                                                <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
+                                                <div class="dropdown-menu"> 
+                                                    <a class="dropdown-item" href="{% url 'brand_available' obj.id %}">{% if not obj.is_active %}Mark Available {% else %}Mark Unavailable{% endif %}</a>
+                                                    {% comment %} <a class="dropdown-item text-danger" href="{% url 'product_details:delete_brand' brand.id %}">Delete</a> {% endcomment %}
+                                                </div>
+                                            </div> <!-- dropdown //end -->
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div> <!-- .col// -->
+            </div> <!-- .row // -->
+        </div> <!-- card body .// -->
+    </div> <!-- card .// -->
+</section> <!-- content-main end// -->
+{% endblock %}
