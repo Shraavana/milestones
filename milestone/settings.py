@@ -161,3 +161,4 @@ EMAIL_USE_TLS=True
 # 
 RAZORPAY_API_KEY = config('RAZORPAY_API_KEY')
 RAZORPAY_API_SECRET =config('RAZORPAY_API_SECRET')
+###########################################################THE END##########################################################################

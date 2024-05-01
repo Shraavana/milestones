@@ -69,14 +69,8 @@
             <p><strong>Order Date:</strong> {{order.created_at}}</p>
             <p><strong>Customer Name:</strong> {{order.user.username}}</p>
             <p><strong>Payment method :</strong>{{order.payment.payment_method}}</p>
-            <p><strong>Address: </strong>{{ order.selected_address.address }}</p>
-            <p><strong>Phone: </strong>{{ order.selected_address.phone }}</p>
-            <p><strong>District: </strong>{{ order.selected_address.district }}</p>
-            <p><strong>Pincode: </strong>{{ order.selected_address.pincode }}</p>
+            <p><strong>Address: </strong>{{ order.selected_address }}</p>
 
-
-
-            
         </div>
         <table class="product-list">
             <thead>

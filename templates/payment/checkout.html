@@ -99,8 +99,13 @@
                         </div>
     
                         <div class="form-group mb-30">
+                            {% if check_address %}
                             <button href="{% url 'pay:payment' %}" class="btn btn-fill-out btn-block mt-30">Use Existing Address</button>
+                            {% endif %}
+                       
+                            <a  href="{% url 'indexuser:add_address' %}" class="btn btn-fill-out btn-block mt-30">Add New Address</a>
                         </div>
+
                 </div>
                 
                 

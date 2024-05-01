@@ -62,7 +62,6 @@ def user_index(request):
     if request.session.get('order_placed', False):
         del request.session['order_placed']
         print(products)
-        messages.success(request, 'Order placed successfully!')
         return redirect('indexuser:user_index') 
 
     context = {
@@ -571,7 +570,7 @@ def add_to_cart(request):
             cart_item.total = product.price * cart_item.quantity
             cart_item.save()
         except CartItem.DoesNotExist:
-            item, created = CartItem.objects.get_or_create(user=user, product=product,address=address.get_address(), defaults={'is_deleted': False})
+            item, created = CartItem.objects.get_or_create(user=user, product=product,address=(address.get_address() if address else None) , defaults={'is_deleted': False})
             item.quantity = qty
             item.total = product.price * qty
             item.save()
@@ -866,7 +865,7 @@ def add_address(request):
             address=form.save(commit=False)
             address.users = request.user
             address.save()
-            return redirect('user_account')
+            return redirect('indexuser:user_account')
     else:
         form=AddressForm()
     context={

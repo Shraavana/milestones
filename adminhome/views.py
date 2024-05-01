@@ -1028,3 +1028,5 @@ def popular_categories(request):
     context = {'products': best_seller_categories}
     
     return render(request, 'adminhome/popular_categories.html', context)
+
+############################################################THE END################################################################################

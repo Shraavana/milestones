@@ -25,7 +25,7 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
     total=models.BigIntegerField(null=True)
     timestamp = models.DateTimeField(default=timezone.now,null=True)
-    address = models.TextField(null=True)
+    address = models.TextField(null=True, blank=True)
     coupon=models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
     is_deleted = models.BooleanField(default=False)
 
